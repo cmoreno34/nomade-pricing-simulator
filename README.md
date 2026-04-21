@@ -26,11 +26,18 @@ It combines **competition-based pricing** with **psychological factors**, lets y
 ### 3. Dynamic graph picker
 Every module has a chip-style picker — tick the graphs you want on the board. Recharts renders them side-by-side, responsive to period + version.
 
-### 4. Download Q&A + Position
-- 13 survey questions (demographics + 6 WTP questions)
-- Aggregated WTP distribution for day / weekend / week, standard + premium
-- **Your position in the simulator**: Nomade prices, competitor prices, peak-profit prices, gap vs competitor average, WTP acceptance rate, psychological parameters used and free-text analyst note
-- Two formats: `JSON` (full structure) and `CSV` (flat, opens in Excel)
+### 4. "How to use" walk-through
+Built-in tab with a 5-step guide, per-tab explanations, per-chart "what this shows" callouts, and a click-to-expand glossary (WTP, peak price, anchoring, charm pricing, Prospect Theory, reference price, …).
+
+### 5. One-click Excel export
+A single `.xlsx` download with **7 sheets**:
+- **Guide** — short explanation of the file
+- **Questions** — the 13 survey questions (text, type, options)
+- **Answers — Day / Weekend / Week** — aggregated WTP tables (price, responses, %, cumulative acceptance)
+- **Position** — your Nomade prices, competitor prices, KPIs (peak profit, gap vs average, acceptance %), psychological parameters and free-text analyst note
+- **Charts** — all 9 simulator charts, embedded as PNG images
+
+Opens in Excel, Numbers, Google Sheets or LibreOffice without any plug-in.
 
 ---
 
