@@ -1,0 +1,891 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Nomade Vans — Pricing Simulator</title>
+<meta name="description" content="Nomade Vans pricing simulator — WTP, competition-based pricing and psychological factors." />
+<script src="https://unpkg.com/react@18.3.1/umd/react.production.min.js" crossorigin></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js" crossorigin></script>
+<script src="https://unpkg.com/prop-types@15.8.1/prop-types.min.js" crossorigin></script>
+<script src="https://unpkg.com/recharts@2.12.7/umd/Recharts.js" crossorigin></script>
+<script src="https://unpkg.com/@babel/standalone@7.24.7/babel.min.js" crossorigin></script>
+<style>
+  :root {
+    --c-bg: #f6f7fb;
+    --c-card: #ffffff;
+    --c-border: #e5e7eb;
+    --c-text: #0f172a;
+    --c-muted: #64748b;
+    --c-blue: #2563eb;
+    --c-blue-50: #eff6ff;
+    --c-orange: #f97316;
+    --c-orange-50: #fff7ed;
+    --c-green: #059669;
+    --c-purple: #7c3aed;
+    --c-red: #dc2626;
+    --shadow: 0 1px 3px rgba(15,23,42,.06), 0 1px 2px rgba(15,23,42,.04);
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; background: var(--c-bg); color: var(--c-text); font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
+  .wrap { max-width: 1200px; margin: 0 auto; padding: 24px; }
+  .hero { background: linear-gradient(90deg, #2563eb 0%, #f97316 100%); color: #fff; padding: 22px 26px; border-radius: 14px; box-shadow: var(--shadow); margin-bottom: 20px; }
+  .hero h1 { margin: 0 0 4px; font-size: 1.55rem; }
+  .hero p { margin: 0; opacity: .9; font-size: .92rem; }
+  .card { background: var(--c-card); border: 1px solid var(--c-border); border-radius: 12px; padding: 18px 20px; margin-bottom: 18px; box-shadow: var(--shadow); }
+  .card h2 { margin: 0 0 14px; font-size: 1.1rem; }
+  .card h3 { margin: 0 0 8px; font-size: .98rem; }
+  .row { display: flex; gap: 10px; flex-wrap: wrap; }
+  .grid-2 { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 16px; }
+  .grid-3 { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 12px; }
+  .grid-4 { display: grid; grid-template-columns: repeat(4, minmax(0,1fr)); gap: 12px; }
+  @media (max-width: 820px) {
+    .grid-2, .grid-3, .grid-4 { grid-template-columns: 1fr; }
+    .wrap { padding: 14px; }
+  }
+  .btn { background: #f1f5f9; color: var(--c-text); border: 1px solid var(--c-border); border-radius: 8px; padding: 8px 14px; font-size: .92rem; cursor: pointer; transition: all .15s; font-weight: 500; }
+  .btn:hover { background: #e2e8f0; }
+  .btn.primary { background: var(--c-blue); color: #fff; border-color: var(--c-blue); }
+  .btn.primary:hover { background: #1d4ed8; }
+  .btn.orange { background: var(--c-orange); color: #fff; border-color: var(--c-orange); }
+  .btn.orange:hover { background: #ea580c; }
+  .btn.green { background: var(--c-green); color: #fff; border-color: var(--c-green); }
+  .btn.green:hover { background: #047857; }
+  .btn.purple { background: var(--c-purple); color: #fff; border-color: var(--c-purple); }
+  .btn.ghost { background: transparent; }
+  .pill { padding: 7px 12px; border-radius: 999px; background: #f1f5f9; font-size: .85rem; border: 1px solid var(--c-border); cursor: pointer; }
+  .pill.active { background: #0f172a; color: #fff; border-color: #0f172a; }
+  label { font-size: .85rem; color: var(--c-muted); display: block; margin-bottom: 4px; }
+  input[type="number"], input[type="text"], select {
+    width: 100%; padding: 8px 10px; border: 1px solid var(--c-border); border-radius: 8px; font-size: .92rem; background: #fff;
+  }
+  .kpi { background: #f8fafc; border: 1px solid var(--c-border); border-radius: 10px; padding: 12px; }
+  .kpi .label { font-size: .78rem; color: var(--c-muted); text-transform: uppercase; letter-spacing: .03em; }
+  .kpi .value { font-size: 1.25rem; font-weight: 700; margin-top: 4px; }
+  .kpi .value.green { color: var(--c-green); }
+  .kpi .value.blue { color: var(--c-blue); }
+  .kpi .value.orange { color: var(--c-orange); }
+  .kpi .value.red { color: var(--c-red); }
+  .tab-row { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 16px; border-bottom: 1px solid var(--c-border); padding-bottom: 8px; }
+  .tab { padding: 9px 16px; font-size: .92rem; font-weight: 500; background: transparent; border: none; cursor: pointer; border-radius: 8px 8px 0 0; color: var(--c-muted); }
+  .tab.active { background: var(--c-blue); color: #fff; }
+  .chip { display: inline-flex; align-items: center; gap: 6px; padding: 6px 10px; border-radius: 8px; font-size: .82rem; background: #f1f5f9; border: 1px solid var(--c-border); cursor: pointer; user-select: none; }
+  .chip input { margin: 0; }
+  .chip.active { background: var(--c-blue-50); border-color: var(--c-blue); color: var(--c-blue); }
+  .chip.active-orange { background: var(--c-orange-50); border-color: var(--c-orange); color: var(--c-orange); }
+  table { width: 100%; border-collapse: collapse; font-size: .9rem; }
+  th, td { padding: 8px 10px; border-bottom: 1px solid var(--c-border); text-align: left; }
+  th { background: #f8fafc; font-weight: 600; color: var(--c-muted); text-transform: uppercase; font-size: .76rem; letter-spacing: .03em; }
+  .note { font-size: .85rem; color: var(--c-muted); line-height: 1.5; }
+  .bar-yours { background: var(--c-orange); }
+  .hint { font-size: .8rem; color: var(--c-muted); margin-top: 2px; }
+  .box-soft { background: #f8fafc; border-radius: 10px; padding: 12px; border: 1px dashed var(--c-border); }
+  .footer { text-align: center; color: var(--c-muted); padding: 18px; font-size: .82rem; }
+</style>
+</head>
+<body>
+<div id="root"></div>
+
+<script type="text/babel" data-type="module">
+const { useState, useMemo, useEffect } = React;
+const {
+  LineChart, Line, BarChart, Bar, ComposedChart, Area,
+  XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
+  Cell, ReferenceLine, ReferenceDot, ScatterChart, Scatter, PieChart, Pie
+} = Recharts;
+
+/* ---------- DATA ---------- */
+const SURVEY = {
+  day: {
+    standard: [
+      { price: 50, responses: 17 },{ price: 60, responses: 14 },{ price: 70, responses: 10 },
+      { price: 80, responses: 16 },{ price: 90, responses: 12 },{ price: 100, responses: 19 },
+      { price: 110, responses: 2 },{ price: 120, responses: 4 },{ price: 130, responses: 1 }
+    ],
+    premium: [
+      { price: 60, responses: 10 },{ price: 70, responses: 5 },{ price: 80, responses: 12 },
+      { price: 90, responses: 8 },{ price: 100, responses: 14 },{ price: 110, responses: 12 },
+      { price: 120, responses: 19 },{ price: 130, responses: 5 },{ price: 140, responses: 3 },
+      { price: 150, responses: 4 },{ price: 160, responses: 1 },{ price: 180, responses: 1 },{ price: 200, responses: 1 }
+    ]
+  },
+  weekend: {
+    standard: [
+      { price: 80, responses: 12 },{ price: 100, responses: 7 },{ price: 120, responses: 18 },
+      { price: 140, responses: 13 },{ price: 160, responses: 11 },{ price: 180, responses: 15 },
+      { price: 200, responses: 11 },{ price: 220, responses: 4 },{ price: 240, responses: 3 },{ price: 300, responses: 1 }
+    ],
+    premium: [
+      { price: 120, responses: 10 },{ price: 140, responses: 6 },{ price: 160, responses: 13 },
+      { price: 180, responses: 8 },{ price: 200, responses: 22 },{ price: 220, responses: 2 },
+      { price: 240, responses: 18 },{ price: 260, responses: 4 },{ price: 280, responses: 2 },
+      { price: 300, responses: 6 },{ price: 320, responses: 2 },{ price: 360, responses: 1 },{ price: 400, responses: 1 }
+    ]
+  },
+  week: {
+    standard: [
+      { price: 240, responses: 14 },{ price: 300, responses: 10 },{ price: 360, responses: 10 },
+      { price: 420, responses: 15 },{ price: 480, responses: 15 },{ price: 540, responses: 8 },
+      { price: 600, responses: 10 },{ price: 660, responses: 3 },{ price: 720, responses: 6 },
+      { price: 840, responses: 2 },{ price: 900, responses: 2 }
+    ],
+    premium: [
+      { price: 360, responses: 9 },{ price: 420, responses: 8 },{ price: 480, responses: 17 },
+      { price: 540, responses: 14 },{ price: 600, responses: 20 },{ price: 660, responses: 4 },
+      { price: 720, responses: 11 },{ price: 780, responses: 3 },{ price: 840, responses: 3 },
+      { price: 900, responses: 3 },{ price: 960, responses: 1 },{ price: 1080, responses: 1 },{ price: 1200, responses: 1 }
+    ]
+  }
+};
+
+const COMPETITORS_DEFAULT = {
+  day:     { furtherVAN: { standard: 85, premium: 95 }, peopleCamper: { standard: 105, premium: 115 }, oceanVans: { standard: 98, premium: 129 } },
+  weekend: { furtherVAN: { standard: 80, premium: 90 }, peopleCamper: { standard: 100, premium: 110 }, oceanVans: { standard: 93, premium: 123 } },
+  week:    { furtherVAN: { standard: 60, premium: 70 }, peopleCamper: { standard: 75,  premium: 85  }, oceanVans: { standard: 68, premium: 95  } }
+};
+
+const OUR_DEFAULT = {
+  day:     { standard: 80, premium: 100 },
+  weekend: { standard: 75, premium: 95  },
+  week:    { standard: 60, premium: 77  }
+};
+
+const COSTS = {
+  standard: { VC: 30, FC: 69750, D: 5000 },
+  premium:  { VC: 30, FC: 77750, D: 5000 }
+};
+
+const DEMAND_MULT = { day: 1.0, weekend: 0.365, week: 0.0743 };
+
+const PERIODS = [
+  { k: 'day',     label: 'Daily' },
+  { k: 'weekend', label: 'Weekend (per day)' },
+  { k: 'week',    label: 'Weekly (per day)' }
+];
+
+const COMP_META = [
+  { k: 'furtherVAN',   name: 'Further VAN',   color: '#3b82f6' },
+  { k: 'peopleCamper', name: 'People Camper', color: '#8b5cf6' },
+  { k: 'oceanVans',    name: 'Ocean Vans',    color: '#10b981' }
+];
+
+/* ---------- SURVEY QUESTION DEFINITIONS (for download) ---------- */
+const QUESTIONS = [
+  { id: 'Q1',  text: 'Gender' },
+  { id: 'Q2',  text: 'Age range' },
+  { id: 'Q3',  text: 'Civil status' },
+  { id: 'Q4',  text: 'Education level' },
+  { id: 'Q5',  text: 'Employment status' },
+  { id: 'Q6',  text: 'Leisure activities' },
+  { id: 'Q7',  text: 'Days of vacation per year' },
+  { id: 'Q8',  text: 'Max WTP — Standard / day (€)' },
+  { id: 'Q9',  text: 'Max WTP — Standard / weekend 2 nights (€)' },
+  { id: 'Q10', text: 'Max WTP — Standard / week 6 nights (€)' },
+  { id: 'Q11', text: 'Max WTP — Premium  / day (€)' },
+  { id: 'Q12', text: 'Max WTP — Premium  / weekend 2 nights (€)' },
+  { id: 'Q13', text: 'Max WTP — Premium  / week 6 nights (€)' }
+];
+
+/* ---------- MATH ---------- */
+function interpolateDemand(surveyData, price, demandPotential) {
+  const sorted = [...surveyData].sort((a,b)=>a.price-b.price);
+  const total = sorted.reduce((s,d)=>s+d.responses,0);
+  let lo = 0, hi = sorted.length - 1;
+  for (let i = 0; i < sorted.length; i++) {
+    if (sorted[i].price <= price) lo = i;
+    if (sorted[i].price >= price && hi === sorted.length - 1) hi = i;
+  }
+  if (lo === hi) {
+    let cum = 0; for (let i = lo; i < sorted.length; i++) cum += sorted[i].responses;
+    return demandPotential * (cum / total);
+  }
+  const p1 = sorted[lo], p2 = sorted[hi];
+  let c1 = 0, c2 = 0;
+  for (let i = lo; i < sorted.length; i++) c1 += sorted[i].responses;
+  for (let i = hi; i < sorted.length; i++) c2 += sorted[i].responses;
+  const f1 = c1/total, f2 = c2/total;
+  const t = (price - p1.price) / (p2.price - p1.price);
+  return demandPotential * (f1 + t * (f2 - f1));
+}
+
+function profitCurve(data, costs, period) {
+  const min = Math.min(...data.map(d=>d.price));
+  const max = Math.max(...data.map(d=>d.price));
+  const step = (max-min)/60;
+  const D0 = costs.D * DEMAND_MULT[period];
+  const out = [];
+  for (let p = min; p <= max; p += step) {
+    const dem = interpolateDemand(data, p, D0);
+    const rev = p * dem;
+    const vc = costs.VC * dem;
+    const prof = rev - vc - costs.FC;
+    out.push({
+      price: Math.round(p*100)/100,
+      demand: Math.round(dem),
+      revenue: Math.round(rev),
+      profit: Math.round(prof)
+    });
+  }
+  return out;
+}
+
+const findPeak = curve => curve.reduce((m,c)=>c.profit>m.profit?c:m, curve[0]);
+
+function wtpCumulative(data) {
+  const sorted = [...data].sort((a,b)=>a.price-b.price);
+  const total = sorted.reduce((s,d)=>s+d.responses,0);
+  let cum = 0;
+  return sorted.map(d => {
+    cum += d.responses;
+    return { price: d.price, responses: d.responses, pct: d.responses/total*100, pctAcceptAtOrAbove: (total - cum + d.responses)/total*100 };
+  });
+}
+
+/* Prospect-theory value function */
+function prospectValue(x, alpha=0.88, lambda=2.25) {
+  return x >= 0 ? Math.pow(x, alpha) : -lambda * Math.pow(-x, alpha);
+}
+
+/* ---------- SMALL COMPONENTS ---------- */
+function Pill({ active, onClick, children, color='blue' }) {
+  const cls = active ? 'pill active' : 'pill';
+  return <button className={cls} onClick={onClick}>{children}</button>;
+}
+
+function KPI({ label, value, color }) {
+  return (
+    <div className="kpi">
+      <div className="label">{label}</div>
+      <div className={`value ${color||''}`}>{value}</div>
+    </div>
+  );
+}
+
+function GraphPicker({ options, selected, setSelected }) {
+  return (
+    <div className="row" style={{gap:8}}>
+      {options.map(o => {
+        const on = selected.includes(o.k);
+        return (
+          <label key={o.k} className={`chip ${on ? (o.group==='psych' ? 'active-orange' : 'active') : ''}`} onClick={() => {
+            if (on) setSelected(selected.filter(x=>x!==o.k));
+            else setSelected([...selected, o.k]);
+          }}>
+            <input type="checkbox" checked={on} readOnly /> {o.label}
+          </label>
+        );
+      })}
+    </div>
+  );
+}
+
+/* ---------- APP ---------- */
+function App() {
+  const [period, setPeriod] = useState('day');
+  const [version, setVersion] = useState('standard');
+  const [competitors, setCompetitors] = useState(COMPETITORS_DEFAULT);
+  const [ourPrices, setOurPrices] = useState(OUR_DEFAULT);
+  const [tab, setTab] = useState('overview');
+
+  /* Dynamic graph picker state (per tab) */
+  const [overviewGraphs, setOverviewGraphs] = useState(['wtp','profit','competitive']);
+  const [psychGraphs, setPsychGraphs] = useState(['anchor','charm','prospect','reference']);
+
+  /* Psychological factor controls */
+  const [charmTest, setCharmTest] = useState({ round: 80, charm: 79 });
+  const [anchorTier, setAnchorTier] = useState({ basic: 60, mid: 80, premium: 100 });
+  const [refPrice, setRefPrice] = useState(85);
+
+  /* Position note (free text that ships with the download) */
+  const [positionNote, setPositionNote] = useState('');
+
+  const curSurvey = SURVEY[period][version];
+  const curCosts  = COSTS[version];
+  const curveStd  = useMemo(()=>profitCurve(SURVEY[period].standard, COSTS.standard, period), [period]);
+  const curvePrem = useMemo(()=>profitCurve(SURVEY[period].premium,  COSTS.premium,  period), [period]);
+  const peakStd   = useMemo(()=>findPeak(curveStd),  [curveStd]);
+  const peakPrem  = useMemo(()=>findPeak(curvePrem), [curvePrem]);
+  const curCurve  = version === 'standard' ? curveStd  : curvePrem;
+  const curPeak   = version === 'standard' ? peakStd   : peakPrem;
+
+  const updateCompetitor = (comp, ver, val) => {
+    setCompetitors(prev => ({ ...prev, [period]: { ...prev[period], [comp]: { ...prev[period][comp], [ver]: parseFloat(val)||0 } } }));
+  };
+  const updateOurs = (ver, val) => {
+    setOurPrices(prev => ({ ...prev, [period]: { ...prev[period], [ver]: parseFloat(val)||0 } }));
+  };
+
+  const compData = [
+    { name: 'Nomade Vans', standard: ourPrices[period].standard, premium: ourPrices[period].premium, color: '#f97316', isUs: true },
+    ...COMP_META.map(c => ({ name: c.name, standard: competitors[period][c.k].standard, premium: competitors[period][c.k].premium, color: c.color, isUs: false }))
+  ];
+
+  /* Nomade vs competitor-average gap (used to compute positioning) */
+  const avgCompStd  = COMP_META.reduce((s,c)=>s+competitors[period][c.k].standard,0) / COMP_META.length;
+  const avgCompPrem = COMP_META.reduce((s,c)=>s+competitors[period][c.k].premium,0) / COMP_META.length;
+  const gapStd  = ourPrices[period].standard - avgCompStd;
+  const gapPrem = ourPrices[period].premium  - avgCompPrem;
+
+  /* % of respondents accepting our price (at or above) */
+  function pctAccepting(data, p) {
+    const total = data.reduce((s,d)=>s+d.responses,0);
+    const accept = data.filter(d => d.price >= p).reduce((s,d)=>s+d.responses,0);
+    return (accept/total)*100;
+  }
+  const pctAcceptStd  = pctAccepting(SURVEY[period].standard, ourPrices[period].standard);
+  const pctAcceptPrem = pctAccepting(SURVEY[period].premium,  ourPrices[period].premium);
+
+  /* ---------- Chart builders ---------- */
+  const WTPChart = () => {
+    const cum = wtpCumulative(curSurvey);
+    const data = curSurvey.map(d => ({ ...d, pctAbove: (cum.find(c=>c.price===d.price)||{}).pctAcceptAtOrAbove || 0 }));
+    const ours = ourPrices[period][version];
+    return (
+      <ResponsiveContainer width="100%" height={320}>
+        <ComposedChart data={data}>
+          <CartesianGrid strokeDasharray="3 3" />
+          <XAxis dataKey="price" />
+          <YAxis yAxisId="l" label={{ value:'Responses', angle:-90, position:'insideLeft' }} />
+          <YAxis yAxisId="r" orientation="right" label={{ value:'% accept ≥ price', angle:90, position:'insideRight' }} />
+          <Tooltip />
+          <Legend />
+          <Bar yAxisId="l" dataKey="responses" name="Responses" fill={version==='standard' ? '#3b82f6' : '#f97316'} />
+          <Line yAxisId="r" type="monotone" dataKey="pctAbove" name="Cum. acceptance %" stroke="#10b981" strokeWidth={2} />
+          <ReferenceLine yAxisId="l" x={ours} stroke="#f97316" strokeWidth={2} strokeDasharray="4 4" label={{ value:`Our €${ours}`, fill:'#f97316', position:'top' }} />
+        </ComposedChart>
+      </ResponsiveContainer>
+    );
+  };
+
+  const ProfitChart = () => (
+    <ResponsiveContainer width="100%" height={340}>
+      <LineChart data={curCurve}>
+        <CartesianGrid strokeDasharray="3 3" />
+        <XAxis dataKey="price" label={{ value:'Price (€)', position:'insideBottom', offset:-5 }} />
+        <YAxis label={{ value:'Profit (€)', angle:-90, position:'insideLeft' }} />
+        <Tooltip formatter={v => `€${Number(v).toLocaleString()}`} />
+        <Legend />
+        <ReferenceLine x={peakStd.price} stroke="#3b82f6" strokeDasharray="5 5" label={{ value:`Std opt €${peakStd.price}`, position:'top', fill:'#3b82f6' }}/>
+        <ReferenceLine x={peakPrem.price} stroke="#f97316" strokeDasharray="5 5" label={{ value:`Prem opt €${peakPrem.price}`, position:'top', fill:'#f97316' }}/>
+        <ReferenceLine x={ourPrices[period][version]} stroke="#059669" strokeWidth={2} label={{ value:`Our €${ourPrices[period][version]}`, position:'bottom', fill:'#059669' }}/>
+        <Line type="monotone" dataKey="profit" stroke={version==='standard' ? '#3b82f6' : '#f97316'} strokeWidth={3} dot={false} name={version==='standard'?'Standard profit':'Premium profit'} />
+      </LineChart>
+    </ResponsiveContainer>
+  );
+
+  const CompetitiveChart = () => (
+    <ResponsiveContainer width="100%" height={340}>
+      <BarChart data={compData}>
+        <CartesianGrid strokeDasharray="3 3" />
+        <XAxis dataKey="name" angle={-12} textAnchor="end" height={70} />
+        <YAxis label={{ value:'Price (€)', angle:-90, position:'insideLeft' }} />
+        <Tooltip />
+        <Legend />
+        <ReferenceLine y={peakStd.price} stroke="#3b82f6" strokeDasharray="5 5" label={{ value:`Std opt €${peakStd.price}`, position:'insideRight', fill:'#3b82f6' }}/>
+        <ReferenceLine y={peakPrem.price} stroke="#f97316" strokeDasharray="5 5" label={{ value:`Prem opt €${peakPrem.price}`, position:'insideRight', fill:'#f97316' }}/>
+        <Bar dataKey="standard" name="Standard">
+          {compData.map((e,i)=><Cell key={'s'+i} fill={e.color} />)}
+        </Bar>
+        <Bar dataKey="premium" name="Premium">
+          {compData.map((e,i)=><Cell key={'p'+i} fill={e.color} opacity={.6} />)}
+        </Bar>
+      </BarChart>
+    </ResponsiveContainer>
+  );
+
+  const DemandChart = () => {
+    const data = curCurve.map(c => ({ price: c.price, demand: c.demand, revenue: c.revenue }));
+    return (
+      <ResponsiveContainer width="100%" height={320}>
+        <ComposedChart data={data}>
+          <CartesianGrid strokeDasharray="3 3" />
+          <XAxis dataKey="price" label={{ value:'Price (€)', position:'insideBottom', offset:-5 }} />
+          <YAxis yAxisId="l" label={{ value:'Demand (rentals)', angle:-90, position:'insideLeft' }} />
+          <YAxis yAxisId="r" orientation="right" label={{ value:'Revenue (€)', angle:90, position:'insideRight' }} />
+          <Tooltip />
+          <Legend />
+          <Line yAxisId="l" type="monotone" dataKey="demand" stroke="#2563eb" strokeWidth={2} dot={false} name="Demand" />
+          <Line yAxisId="r" type="monotone" dataKey="revenue" stroke="#f97316" strokeWidth={2} dot={false} name="Revenue" />
+        </ComposedChart>
+      </ResponsiveContainer>
+    );
+  };
+
+  const GapChart = () => {
+    /* Shows gap (€) vs each competitor */
+    const data = COMP_META.map(c => ({
+      name: c.name,
+      standardGap: ourPrices[period].standard - competitors[period][c.k].standard,
+      premiumGap:  ourPrices[period].premium  - competitors[period][c.k].premium,
+      color: c.color
+    }));
+    return (
+      <ResponsiveContainer width="100%" height={300}>
+        <BarChart data={data}>
+          <CartesianGrid strokeDasharray="3 3" />
+          <XAxis dataKey="name" />
+          <YAxis label={{ value:'Our price − competitor (€)', angle:-90, position:'insideLeft' }} />
+          <ReferenceLine y={0} stroke="#0f172a" />
+          <Tooltip />
+          <Legend />
+          <Bar dataKey="standardGap" name="Standard gap" fill="#2563eb" />
+          <Bar dataKey="premiumGap"  name="Premium gap"  fill="#f97316" />
+        </BarChart>
+      </ResponsiveContainer>
+    );
+  };
+
+  /* ---------- Psychological factor charts ---------- */
+  const AnchorChart = () => {
+    const data = [
+      { name: 'Basic', price: anchorTier.basic, label: 'loss in quality' },
+      { name: 'Middle (target)', price: anchorTier.mid, label: 'sandwich — preferred' },
+      { name: 'Premium anchor', price: anchorTier.premium, label: 'loss in cost' }
+    ];
+    return (
+      <ResponsiveContainer width="100%" height={280}>
+        <BarChart data={data}>
+          <CartesianGrid strokeDasharray="3 3" />
+          <XAxis dataKey="name" />
+          <YAxis label={{ value:'Price (€)', angle:-90, position:'insideLeft' }} />
+          <Tooltip formatter={v => `€${v}`} />
+          <Bar dataKey="price">
+            <Cell fill="#94a3b8" />
+            <Cell fill="#059669" />
+            <Cell fill="#dc2626" />
+          </Bar>
+        </BarChart>
+      </ResponsiveContainer>
+    );
+  };
+
+  const CharmChart = () => {
+    /* Simulates what share of WTP responses will 'feel' each price is affordable.
+       Charm pricing narrative: €79 perceived closer to €70 than €80 by digit-left effect. */
+    const left1 = Math.floor(charmTest.round/10);
+    const left2 = Math.floor(charmTest.charm/10);
+    const demandRound = interpolateDemand(curSurvey, charmTest.round, curCosts.D * DEMAND_MULT[period]);
+    /* apply a 'perception boost' when left digit drops */
+    const boost = left2 < left1 ? 1.07 : 1.0;
+    const demandCharm = interpolateDemand(curSurvey, charmTest.charm, curCosts.D * DEMAND_MULT[period]) * boost;
+    const data = [
+      { name: `€${charmTest.round} (round)`, demand: Math.round(demandRound),  profit: Math.round(demandRound * (charmTest.round - curCosts.VC) - curCosts.FC) },
+      { name: `€${charmTest.charm} (charm)`, demand: Math.round(demandCharm),  profit: Math.round(demandCharm * (charmTest.charm - curCosts.VC) - curCosts.FC) }
+    ];
+    return (
+      <ResponsiveContainer width="100%" height={260}>
+        <BarChart data={data}>
+          <CartesianGrid strokeDasharray="3 3" />
+          <XAxis dataKey="name" />
+          <YAxis yAxisId="l" />
+          <YAxis yAxisId="r" orientation="right" />
+          <Tooltip formatter={v => Number(v).toLocaleString()} />
+          <Legend />
+          <Bar yAxisId="l" dataKey="demand" name="Expected demand" fill="#2563eb" />
+          <Bar yAxisId="r" dataKey="profit" name="Profit (€)" fill="#f97316" />
+        </BarChart>
+      </ResponsiveContainer>
+    );
+  };
+
+  const ProspectChart = () => {
+    const pts = [];
+    for (let x = -50; x <= 50; x += 2) pts.push({ gainLoss: x, value: Math.round(prospectValue(x)*100)/100 });
+    return (
+      <ResponsiveContainer width="100%" height={280}>
+        <LineChart data={pts}>
+          <CartesianGrid strokeDasharray="3 3" />
+          <XAxis dataKey="gainLoss" label={{ value:'Gain/Loss (€)', position:'insideBottom', offset:-5 }} />
+          <YAxis label={{ value:'Perceived value', angle:-90, position:'insideLeft' }} />
+          <ReferenceLine x={0} stroke="#0f172a" />
+          <ReferenceLine y={0} stroke="#0f172a" />
+          <Tooltip />
+          <Line type="monotone" dataKey="value" stroke="#7c3aed" strokeWidth={3} dot={false} name="v(x) = x^α / −λ(−x)^α" />
+        </LineChart>
+      </ResponsiveContainer>
+    );
+  };
+
+  const ReferenceChart = () => {
+    /* How respondents' WTP compares to a reference price */
+    const below = curSurvey.filter(d => d.price <  refPrice).reduce((s,d)=>s+d.responses,0);
+    const at    = curSurvey.filter(d => d.price === refPrice).reduce((s,d)=>s+d.responses,0);
+    const above = curSurvey.filter(d => d.price >  refPrice).reduce((s,d)=>s+d.responses,0);
+    const data = [
+      { name: `Below €${refPrice}`, value: below, fill:'#dc2626' },
+      { name: `At €${refPrice}`,    value: at,    fill:'#f59e0b' },
+      { name: `Above €${refPrice}`, value: above, fill:'#059669' }
+    ];
+    return (
+      <ResponsiveContainer width="100%" height={260}>
+        <BarChart data={data}>
+          <CartesianGrid strokeDasharray="3 3" />
+          <XAxis dataKey="name" />
+          <YAxis />
+          <Tooltip />
+          <Bar dataKey="value">
+            {data.map((d,i)=><Cell key={i} fill={d.fill} />)}
+          </Bar>
+        </BarChart>
+      </ResponsiveContainer>
+    );
+  };
+
+  /* ---------- Download handlers ---------- */
+  const now = new Date().toISOString();
+  const position = {
+    generatedAt: now,
+    period,
+    version,
+    ourPrices,
+    competitors,
+    peakStandard: { price: peakStd.price, demand: peakStd.demand, revenue: peakStd.revenue, profit: peakStd.profit },
+    peakPremium:  { price: peakPrem.price, demand: peakPrem.demand, revenue: peakPrem.revenue, profit: peakPrem.profit },
+    gapVsAverage: { standard: Math.round(gapStd*100)/100, premium: Math.round(gapPrem*100)/100 },
+    wtpAcceptance: { standard: Math.round(pctAcceptStd*100)/100 + '%', premium: Math.round(pctAcceptPrem*100)/100 + '%' },
+    psychologicalFactorsUsed: {
+      anchoring: anchorTier,
+      charmPricing: charmTest,
+      referencePrice: refPrice
+    },
+    analystNote: positionNote
+  };
+
+  const downloadJSON = () => {
+    const payload = {
+      questionnaire: QUESTIONS,
+      surveyAggregates: SURVEY,
+      simulatorPosition: position
+    };
+    const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = `nomade-simulator-${period}-${version}.json`;
+    a.click();
+    URL.revokeObjectURL(a.href);
+  };
+
+  const downloadCSV = () => {
+    const rows = [];
+    rows.push(['SECTION','Questions']);
+    rows.push(['Question ID','Question text']);
+    QUESTIONS.forEach(q => rows.push([q.id, q.text]));
+    rows.push([]);
+    rows.push(['SECTION','Survey aggregates']);
+    rows.push(['Period','Version','Price (€)','Responses']);
+    for (const p of ['day','weekend','week']) {
+      for (const v of ['standard','premium']) {
+        for (const r of SURVEY[p][v]) rows.push([p, v, r.price, r.responses]);
+      }
+    }
+    rows.push([]);
+    rows.push(['SECTION','Simulator position']);
+    rows.push(['Field','Value']);
+    rows.push(['Generated at', now]);
+    rows.push(['Active period', period]);
+    rows.push(['Active version', version]);
+    for (const p of ['day','weekend','week']) {
+      rows.push([`Our ${p} standard (€)`, ourPrices[p].standard]);
+      rows.push([`Our ${p} premium (€)`,  ourPrices[p].premium]);
+      for (const c of COMP_META) {
+        rows.push([`${c.name} ${p} standard (€)`, competitors[p][c.k].standard]);
+        rows.push([`${c.name} ${p} premium (€)`,  competitors[p][c.k].premium]);
+      }
+    }
+    rows.push(['Peak profit price — standard (€)', peakStd.price]);
+    rows.push(['Peak profit — standard (€)', peakStd.profit]);
+    rows.push(['Peak profit price — premium  (€)', peakPrem.price]);
+    rows.push(['Peak profit — premium  (€)', peakPrem.profit]);
+    rows.push(['Gap vs avg competitor — standard (€)', Math.round(gapStd*100)/100]);
+    rows.push(['Gap vs avg competitor — premium  (€)', Math.round(gapPrem*100)/100]);
+    rows.push(['WTP acceptance — standard (%)', Math.round(pctAcceptStd*100)/100]);
+    rows.push(['WTP acceptance — premium  (%)', Math.round(pctAcceptPrem*100)/100]);
+    rows.push(['Anchoring — basic',   anchorTier.basic]);
+    rows.push(['Anchoring — middle',  anchorTier.mid]);
+    rows.push(['Anchoring — premium', anchorTier.premium]);
+    rows.push(['Charm pricing — round price', charmTest.round]);
+    rows.push(['Charm pricing — charm price', charmTest.charm]);
+    rows.push(['Reference price',     refPrice]);
+    rows.push(['Analyst note',        (positionNote||'').replace(/"/g,'""')]);
+
+    const csv = rows.map(r => r.map(c => {
+      const s = c===undefined||c===null ? '' : String(c);
+      return /[",\n;]/.test(s) ? `"${s.replace(/"/g,'""')}"` : s;
+    }).join(',')).join('\n');
+
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = `nomade-simulator-${period}-${version}.csv`;
+    a.click();
+    URL.revokeObjectURL(a.href);
+  };
+
+  /* ---------- Graph catalog (for the dynamic picker) ---------- */
+  const OVERVIEW_GRAPHS = [
+    { k:'wtp',         label:'WTP distribution',       group:'overview' },
+    { k:'profit',      label:'Profit curve',           group:'overview' },
+    { k:'demand',      label:'Demand + Revenue',       group:'overview' },
+    { k:'competitive', label:'Competitive positioning',group:'overview' },
+    { k:'gap',         label:'Gap vs competitors',     group:'overview' }
+  ];
+  const PSYCH_GRAPHS = [
+    { k:'anchor',    label:'Anchoring / Sandwich',   group:'psych' },
+    { k:'charm',     label:'Charm pricing (digit 9)',group:'psych' },
+    { k:'prospect',  label:'Prospect Theory',        group:'psych' },
+    { k:'reference', label:'Reference price',        group:'psych' }
+  ];
+
+  const GraphBlock = ({k}) => {
+    const titles = {
+      wtp:'WTP distribution & cumulative acceptance',
+      profit:'Profit curve',
+      demand:'Demand + Revenue',
+      competitive:'Competitive positioning',
+      gap:'Gap vs competitors',
+      anchor:'Good-Better-Best (Anchoring)',
+      charm:'Charm pricing (round vs digit-9)',
+      prospect:'Prospect Theory value function',
+      reference:'Reference price — respondents around threshold'
+    };
+    const C = {
+      wtp:<WTPChart/>, profit:<ProfitChart/>, demand:<DemandChart/>,
+      competitive:<CompetitiveChart/>, gap:<GapChart/>,
+      anchor:<AnchorChart/>, charm:<CharmChart/>, prospect:<ProspectChart/>, reference:<ReferenceChart/>
+    }[k];
+    return (
+      <div className="card" key={k}>
+        <h3>{titles[k]}</h3>
+        {C}
+      </div>
+    );
+  };
+
+  /* ---------- Render ---------- */
+  return (
+    <div className="wrap">
+      <div className="hero">
+        <h1>Nomade Vans — Pricing Simulator</h1>
+        <p>WTP • Competition-based pricing • Psychological factors — interactive, shareable, exportable.</p>
+      </div>
+
+      {/* Master controls */}
+      <div className="card">
+        <div className="grid-2">
+          <div>
+            <label>Rental period</label>
+            <div className="row">
+              {PERIODS.map(p =>
+                <Pill key={p.k} active={period===p.k} onClick={()=>setPeriod(p.k)}>{p.label}</Pill>
+              )}
+            </div>
+          </div>
+          <div>
+            <label>Version</label>
+            <div className="row">
+              <Pill active={version==='standard'} onClick={()=>setVersion('standard')}>Standard</Pill>
+              <Pill active={version==='premium'}  onClick={()=>setVersion('premium')}>Premium</Pill>
+            </div>
+          </div>
+        </div>
+
+        <div className="grid-4" style={{marginTop:14}}>
+          <KPI label="Std peak price"  value={`€${peakStd.price}`}  color="blue" />
+          <KPI label="Prem peak price" value={`€${peakPrem.price}`} color="orange" />
+          <KPI label="Our std price"   value={`€${ourPrices[period].standard}`} />
+          <KPI label="Our prem price"  value={`€${ourPrices[period].premium}`} />
+        </div>
+        <div className="grid-4" style={{marginTop:10}}>
+          <KPI label="Acceptance % — std"  value={`${pctAcceptStd.toFixed(1)}%`}  color={pctAcceptStd>50?'green':'red'} />
+          <KPI label="Acceptance % — prem" value={`${pctAcceptPrem.toFixed(1)}%`} color={pctAcceptPrem>50?'green':'red'} />
+          <KPI label="Gap vs avg (std)"    value={`${gapStd>=0?'+':''}€${gapStd.toFixed(1)}`}  color={gapStd>0?'red':'green'} />
+          <KPI label="Gap vs avg (prem)"   value={`${gapPrem>=0?'+':''}€${gapPrem.toFixed(1)}`} color={gapPrem>0?'red':'green'} />
+        </div>
+      </div>
+
+      {/* Tabs */}
+      <div className="tab-row">
+        <button className={`tab ${tab==='overview'?'active':''}`}   onClick={()=>setTab('overview')}>Competition-based</button>
+        <button className={`tab ${tab==='psych'?'active':''}`}      onClick={()=>setTab('psych')}>Psychological factors</button>
+        <button className={`tab ${tab==='position'?'active':''}`}   onClick={()=>setTab('position')}>Position & prices</button>
+        <button className={`tab ${tab==='download'?'active':''}`}   onClick={()=>setTab('download')}>Download Q&amp;A</button>
+      </div>
+
+      {/* Tab — Overview / Competition-based */}
+      {tab==='overview' && (
+        <>
+          <div className="card">
+            <h2>Graph picker — Competition-based</h2>
+            <p className="note">Combine WTP, profitability and competition charts. Tick the graphs you want on the board.</p>
+            <GraphPicker options={OVERVIEW_GRAPHS} selected={overviewGraphs} setSelected={setOverviewGraphs} />
+          </div>
+          {overviewGraphs.map(k => <GraphBlock k={k} key={k} />)}
+          <div className="card">
+            <h2>Detailed price table</h2>
+            <table>
+              <thead>
+                <tr><th>Company</th><th>Standard (€)</th><th>Premium (€)</th><th>Gap (€)</th></tr>
+              </thead>
+              <tbody>
+                {compData.map((c,i) => (
+                  <tr key={i} style={c.isUs ? {background:'#fff7ed', fontWeight:600} : null}>
+                    <td><span style={{display:'inline-block', width:10, height:10, borderRadius:10, background:c.color, marginRight:8}}/>{c.name}</td>
+                    <td>€{c.standard}</td><td>€{c.premium}</td><td>€{c.premium - c.standard}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </>
+      )}
+
+      {/* Tab — Psychological factors */}
+      {tab==='psych' && (
+        <>
+          <div className="card">
+            <h2>Graph picker — Psychological factors</h2>
+            <p className="note">Explore presentation issues and fairness heuristics applied to Nomade Vans pricing.</p>
+            <GraphPicker options={PSYCH_GRAPHS} selected={psychGraphs} setSelected={setPsychGraphs} />
+          </div>
+
+          {psychGraphs.includes('anchor') && (
+            <div className="card">
+              <h3>Anchoring — Good-Better-Best sandwich</h3>
+              <p className="note">Create a three-tier menu. Customers gravitate to the middle option.</p>
+              <div className="grid-3">
+                <div><label>Basic (€)</label><input type="number" value={anchorTier.basic} onChange={e=>setAnchorTier({...anchorTier, basic:+e.target.value})}/></div>
+                <div><label>Middle — target (€)</label><input type="number" value={anchorTier.mid} onChange={e=>setAnchorTier({...anchorTier, mid:+e.target.value})}/></div>
+                <div><label>Premium anchor (€)</label><input type="number" value={anchorTier.premium} onChange={e=>setAnchorTier({...anchorTier, premium:+e.target.value})}/></div>
+              </div>
+              <div style={{marginTop:12}}><AnchorChart /></div>
+            </div>
+          )}
+
+          {psychGraphs.includes('charm') && (
+            <div className="card">
+              <h3>Charm pricing — digit-9 effect</h3>
+              <p className="note">Compare a round price vs a charm price (e.g. €80 vs €79). The simulator applies a 7% perception uplift when the left digit drops.</p>
+              <div className="grid-2">
+                <div><label>Round price (€)</label><input type="number" value={charmTest.round} onChange={e=>setCharmTest({...charmTest, round:+e.target.value})}/></div>
+                <div><label>Charm price (€)</label><input type="number" value={charmTest.charm} onChange={e=>setCharmTest({...charmTest, charm:+e.target.value})}/></div>
+              </div>
+              <div style={{marginTop:12}}><CharmChart /></div>
+            </div>
+          )}
+
+          {psychGraphs.includes('prospect') && (
+            <div className="card">
+              <h3>Prospect Theory — losses weigh more than gains</h3>
+              <p className="note">v(x) = x<sup>0.88</sup> on gains and −2.25·(−x)<sup>0.88</sup> on losses. A price hike of €10 hurts much more than a discount of €10 pleases.</p>
+              <ProspectChart />
+            </div>
+          )}
+
+          {psychGraphs.includes('reference') && (
+            <div className="card">
+              <h3>Reference price</h3>
+              <p className="note">Set a reference price (e.g. the cheapest competitor or the previous market rate). See how many survey respondents fall below / at / above it.</p>
+              <div style={{maxWidth:240}}>
+                <label>Reference price (€)</label>
+                <input type="number" value={refPrice} onChange={e=>setRefPrice(+e.target.value)} />
+              </div>
+              <div style={{marginTop:12}}><ReferenceChart /></div>
+            </div>
+          )}
+        </>
+      )}
+
+      {/* Tab — Position & prices */}
+      {tab==='position' && (
+        <>
+          <div className="card">
+            <h2>Our position — Nomade Vans</h2>
+            <p className="note">These values are saved with the download so you can compare your positioning across sessions.</p>
+            <div className="grid-3">
+              {PERIODS.map(p => (
+                <div key={p.k} className="box-soft">
+                  <h3>{p.label}</h3>
+                  <label>Standard (€)</label>
+                  <input type="number" value={ourPrices[p.k].standard} onChange={e=>setOurPrices(prev=>({...prev,[p.k]:{...prev[p.k],standard:+e.target.value}}))}/>
+                  <label style={{marginTop:8}}>Premium (€)</label>
+                  <input type="number" value={ourPrices[p.k].premium} onChange={e=>setOurPrices(prev=>({...prev,[p.k]:{...prev[p.k],premium:+e.target.value}}))}/>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="card">
+            <h2>Competitor prices — {PERIODS.find(p=>p.k===period).label}</h2>
+            <div className="grid-3">
+              {COMP_META.map(c => (
+                <div key={c.k} className="box-soft" style={{borderColor:c.color}}>
+                  <h3 style={{color:c.color}}>{c.name}</h3>
+                  <label>Standard (€)</label>
+                  <input type="number" value={competitors[period][c.k].standard} onChange={e=>updateCompetitor(c.k,'standard',e.target.value)}/>
+                  <label style={{marginTop:8}}>Premium (€)</label>
+                  <input type="number" value={competitors[period][c.k].premium} onChange={e=>updateCompetitor(c.k,'premium',e.target.value)}/>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="card">
+            <h2>Analyst note</h2>
+            <p className="note">Free text (reasoning, assumptions, stakeholder etc.) — it travels in the download.</p>
+            <textarea rows="4" style={{width:'100%', padding:10, border:'1px solid var(--c-border)', borderRadius:8, fontFamily:'inherit'}}
+              value={positionNote} onChange={e=>setPositionNote(e.target.value)}
+              placeholder="e.g. We chose to sit €5 under People Camper to open the weekend segment..."/>
+          </div>
+        </>
+      )}
+
+      {/* Tab — Download */}
+      {tab==='download' && (
+        <div className="card">
+          <h2>Download questionnaire &amp; position</h2>
+          <p className="note">
+            Exports the questions asked in the survey, the aggregated answers by price point, and the full position you set
+            in the simulator (prices, competitor assumptions, peak profit points, psychological parameters and analyst note).
+          </p>
+
+          <div className="grid-2">
+            <div className="box-soft">
+              <h3>What is included</h3>
+              <ul>
+                <li>13 survey questions (gender, demographics, 6 WTP questions)</li>
+                <li>Aggregated WTP distribution for day / weekend / week, standard &amp; premium</li>
+                <li>Your position: Nomade prices + competitor prices, for all periods</li>
+                <li>Peak-profit prices, gap vs competitor average, WTP acceptance rate</li>
+                <li>Psychological parameters (anchoring tiers, charm test, reference price)</li>
+                <li>Analyst free-text note</li>
+              </ul>
+            </div>
+            <div className="box-soft">
+              <h3>Formats</h3>
+              <p className="note">JSON keeps the full structure; CSV is flat and opens in Excel.</p>
+              <div className="row">
+                <button className="btn primary" onClick={downloadJSON}>Download JSON</button>
+                <button className="btn orange"  onClick={downloadCSV}>Download CSV</button>
+              </div>
+              <p className="hint">Filename includes the active period &amp; version.</p>
+            </div>
+          </div>
+
+          <div style={{marginTop:16}}>
+            <h3>Preview — position snapshot</h3>
+            <pre style={{background:'#0f172a', color:'#e2e8f0', padding:14, borderRadius:10, overflow:'auto', fontSize:'.82rem'}}>
+{JSON.stringify(position, null, 2)}
+            </pre>
+          </div>
+        </div>
+      )}
+
+      <div className="footer">© César Moreno Pascual PhD — Nomade Vans pricing simulator • Built with React + Recharts</div>
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+</script>
+</body>
+</html>
