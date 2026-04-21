@@ -10,6 +10,7 @@
 <script src="https://unpkg.com/prop-types@15.8.1/prop-types.min.js" crossorigin></script>
 <script src="https://unpkg.com/recharts@2.12.7/umd/Recharts.js" crossorigin></script>
 <script src="https://unpkg.com/@babel/standalone@7.24.7/babel.min.js" crossorigin></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.4.0/exceljs.min.js"></script>
 <style>
   :root {
     --c-bg: #f6f7fb;
@@ -31,10 +32,11 @@
   .wrap { max-width: 1200px; margin: 0 auto; padding: 24px; }
   .hero { background: linear-gradient(90deg, #2563eb 0%, #f97316 100%); color: #fff; padding: 22px 26px; border-radius: 14px; box-shadow: var(--shadow); margin-bottom: 20px; }
   .hero h1 { margin: 0 0 4px; font-size: 1.55rem; }
-  .hero p { margin: 0; opacity: .9; font-size: .92rem; }
+  .hero p { margin: 0; opacity: .92; font-size: .92rem; }
   .card { background: var(--c-card); border: 1px solid var(--c-border); border-radius: 12px; padding: 18px 20px; margin-bottom: 18px; box-shadow: var(--shadow); }
-  .card h2 { margin: 0 0 14px; font-size: 1.1rem; }
+  .card h2 { margin: 0 0 10px; font-size: 1.1rem; }
   .card h3 { margin: 0 0 8px; font-size: .98rem; }
+  .card p { margin: 0 0 10px; }
   .row { display: flex; gap: 10px; flex-wrap: wrap; }
   .grid-2 { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 16px; }
   .grid-3 { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 12px; }
@@ -43,21 +45,20 @@
     .grid-2, .grid-3, .grid-4 { grid-template-columns: 1fr; }
     .wrap { padding: 14px; }
   }
-  .btn { background: #f1f5f9; color: var(--c-text); border: 1px solid var(--c-border); border-radius: 8px; padding: 8px 14px; font-size: .92rem; cursor: pointer; transition: all .15s; font-weight: 500; }
+  .btn { background: #f1f5f9; color: var(--c-text); border: 1px solid var(--c-border); border-radius: 8px; padding: 9px 16px; font-size: .92rem; cursor: pointer; transition: all .15s; font-weight: 500; }
   .btn:hover { background: #e2e8f0; }
+  .btn[disabled] { opacity: .5; cursor: not-allowed; }
   .btn.primary { background: var(--c-blue); color: #fff; border-color: var(--c-blue); }
   .btn.primary:hover { background: #1d4ed8; }
   .btn.orange { background: var(--c-orange); color: #fff; border-color: var(--c-orange); }
   .btn.orange:hover { background: #ea580c; }
   .btn.green { background: var(--c-green); color: #fff; border-color: var(--c-green); }
   .btn.green:hover { background: #047857; }
-  .btn.purple { background: var(--c-purple); color: #fff; border-color: var(--c-purple); }
-  .btn.ghost { background: transparent; }
   .pill { padding: 7px 12px; border-radius: 999px; background: #f1f5f9; font-size: .85rem; border: 1px solid var(--c-border); cursor: pointer; }
   .pill.active { background: #0f172a; color: #fff; border-color: #0f172a; }
   label { font-size: .85rem; color: var(--c-muted); display: block; margin-bottom: 4px; }
-  input[type="number"], input[type="text"], select {
-    width: 100%; padding: 8px 10px; border: 1px solid var(--c-border); border-radius: 8px; font-size: .92rem; background: #fff;
+  input[type="number"], input[type="text"], select, textarea {
+    width: 100%; padding: 8px 10px; border: 1px solid var(--c-border); border-radius: 8px; font-size: .92rem; background: #fff; font-family: inherit;
   }
   .kpi { background: #f8fafc; border: 1px solid var(--c-border); border-radius: 10px; padding: 12px; }
   .kpi .label { font-size: .78rem; color: var(--c-muted); text-transform: uppercase; letter-spacing: .03em; }
@@ -76,25 +77,46 @@
   table { width: 100%; border-collapse: collapse; font-size: .9rem; }
   th, td { padding: 8px 10px; border-bottom: 1px solid var(--c-border); text-align: left; }
   th { background: #f8fafc; font-weight: 600; color: var(--c-muted); text-transform: uppercase; font-size: .76rem; letter-spacing: .03em; }
-  .note { font-size: .85rem; color: var(--c-muted); line-height: 1.5; }
-  .bar-yours { background: var(--c-orange); }
-  .hint { font-size: .8rem; color: var(--c-muted); margin-top: 2px; }
+  .note { font-size: .88rem; color: var(--c-muted); line-height: 1.55; }
+  .explain { font-size: .88rem; color: var(--c-text); line-height: 1.55; background: #f8fafc; border-left: 3px solid var(--c-blue); padding: 10px 14px; border-radius: 6px; margin: 10px 0; }
+  .explain.orange { border-left-color: var(--c-orange); background: #fff7ed; }
+  .explain.green  { border-left-color: var(--c-green); background: #ecfdf5; }
+  .explain.purple { border-left-color: var(--c-purple); background: #f5f3ff; }
+  .explain strong { color: var(--c-text); }
+  .step-list { counter-reset: step; list-style: none; padding-left: 0; margin: 0; }
+  .step-list li { counter-increment: step; padding: 8px 0 8px 44px; position: relative; font-size: .92rem; line-height: 1.5; }
+  .step-list li::before {
+    content: counter(step);
+    position: absolute; left: 0; top: 8px;
+    width: 28px; height: 28px; border-radius: 999px;
+    background: var(--c-blue); color: #fff; text-align: center; line-height: 28px; font-weight: 700; font-size: .85rem;
+  }
   .box-soft { background: #f8fafc; border-radius: 10px; padding: 12px; border: 1px dashed var(--c-border); }
+  details { background: #f8fafc; border-radius: 10px; padding: 10px 14px; margin: 8px 0; border: 1px solid var(--c-border); }
+  details summary { cursor: pointer; font-weight: 600; font-size: .92rem; }
+  details[open] summary { margin-bottom: 10px; }
+  .hint { font-size: .8rem; color: var(--c-muted); margin-top: 2px; }
+  .offscreen { position: absolute; left: -99999px; top: 0; width: 860px; pointer-events: none; }
   .footer { text-align: center; color: var(--c-muted); padding: 18px; font-size: .82rem; }
+  .status { font-size: .85rem; padding: 8px 12px; border-radius: 8px; background: #eff6ff; color: #1e40af; margin-top: 8px; display: inline-block; }
+  .status.err { background: #fee2e2; color: #991b1b; }
+  .status.ok  { background: #dcfce7; color: #166534; }
 </style>
 </head>
 <body>
 <div id="root"></div>
 
 <script type="text/babel" data-type="module">
-const { useState, useMemo, useEffect } = React;
+const { useState, useMemo, useEffect, useRef } = React;
 const {
   LineChart, Line, BarChart, Bar, ComposedChart, Area,
   XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
-  Cell, ReferenceLine, ReferenceDot, ScatterChart, Scatter, PieChart, Pie
+  Cell, ReferenceLine
 } = Recharts;
 
-/* ---------- DATA ---------- */
+/* ============================================================
+   DATA
+   ============================================================ */
 const SURVEY = {
   day: {
     standard: [
@@ -154,7 +176,6 @@ const COSTS = {
   standard: { VC: 30, FC: 69750, D: 5000 },
   premium:  { VC: 30, FC: 77750, D: 5000 }
 };
-
 const DEMAND_MULT = { day: 1.0, weekend: 0.365, week: 0.0743 };
 
 const PERIODS = [
@@ -162,31 +183,31 @@ const PERIODS = [
   { k: 'weekend', label: 'Weekend (per day)' },
   { k: 'week',    label: 'Weekly (per day)' }
 ];
-
 const COMP_META = [
   { k: 'furtherVAN',   name: 'Further VAN',   color: '#3b82f6' },
   { k: 'peopleCamper', name: 'People Camper', color: '#8b5cf6' },
   { k: 'oceanVans',    name: 'Ocean Vans',    color: '#10b981' }
 ];
 
-/* ---------- SURVEY QUESTION DEFINITIONS (for download) ---------- */
 const QUESTIONS = [
-  { id: 'Q1',  text: 'Gender' },
-  { id: 'Q2',  text: 'Age range' },
-  { id: 'Q3',  text: 'Civil status' },
-  { id: 'Q4',  text: 'Education level' },
-  { id: 'Q5',  text: 'Employment status' },
-  { id: 'Q6',  text: 'Leisure activities' },
-  { id: 'Q7',  text: 'Days of vacation per year' },
-  { id: 'Q8',  text: 'Max WTP — Standard / day (€)' },
-  { id: 'Q9',  text: 'Max WTP — Standard / weekend 2 nights (€)' },
-  { id: 'Q10', text: 'Max WTP — Standard / week 6 nights (€)' },
-  { id: 'Q11', text: 'Max WTP — Premium  / day (€)' },
-  { id: 'Q12', text: 'Max WTP — Premium  / weekend 2 nights (€)' },
-  { id: 'Q13', text: 'Max WTP — Premium  / week 6 nights (€)' }
+  { id: 'Q1',  text: 'Gender', type: 'multiple choice', options: 'Male, Female, Other' },
+  { id: 'Q2',  text: 'Age range', type: 'multiple choice', options: '<20, 20-30, 30-40, 40-50, >50' },
+  { id: 'Q3',  text: 'Civil status', type: 'multiple choice', options: 'Single, Married, Divorced, Widowed' },
+  { id: 'Q4',  text: 'Education level', type: 'multiple choice', options: 'Primary, Secondary, University, Master/PhD' },
+  { id: 'Q5',  text: 'Employment status', type: 'multiple choice', options: 'Employed, Self-employed, Unemployed, Retired, Student' },
+  { id: 'Q6',  text: 'Leisure activities', type: 'multi-select', options: 'Travel, Read, Sports, Adventure, Family time, Other' },
+  { id: 'Q7',  text: 'Days of vacation per year', type: 'multiple choice', options: '<3, 3-5, 5-7, >7' },
+  { id: 'Q8',  text: 'Max WTP — Standard / day (€)', type: 'numeric/band', options: '€50–€130 bands' },
+  { id: 'Q9',  text: 'Max WTP — Standard / weekend 2 nights (€)', type: 'numeric/band', options: '€80–€300 bands' },
+  { id: 'Q10', text: 'Max WTP — Standard / week 6 nights (€)', type: 'numeric/band', options: '€240–€900 bands' },
+  { id: 'Q11', text: 'Max WTP — Premium / day (€)', type: 'numeric/band', options: '€60–€200 bands' },
+  { id: 'Q12', text: 'Max WTP — Premium / weekend 2 nights (€)', type: 'numeric/band', options: '€120–€400 bands' },
+  { id: 'Q13', text: 'Max WTP — Premium / week 6 nights (€)', type: 'numeric/band', options: '€360–€1200 bands' }
 ];
 
-/* ---------- MATH ---------- */
+/* ============================================================
+   MATH
+   ============================================================ */
 function interpolateDemand(surveyData, price, demandPotential) {
   const sorted = [...surveyData].sort((a,b)=>a.price-b.price);
   const total = sorted.reduce((s,d)=>s+d.responses,0);
@@ -219,16 +240,10 @@ function profitCurve(data, costs, period) {
     const rev = p * dem;
     const vc = costs.VC * dem;
     const prof = rev - vc - costs.FC;
-    out.push({
-      price: Math.round(p*100)/100,
-      demand: Math.round(dem),
-      revenue: Math.round(rev),
-      profit: Math.round(prof)
-    });
+    out.push({ price: Math.round(p*100)/100, demand: Math.round(dem), revenue: Math.round(rev), profit: Math.round(prof) });
   }
   return out;
 }
-
 const findPeak = curve => curve.reduce((m,c)=>c.profit>m.profit?c:m, curve[0]);
 
 function wtpCumulative(data) {
@@ -237,67 +252,66 @@ function wtpCumulative(data) {
   let cum = 0;
   return sorted.map(d => {
     cum += d.responses;
-    return { price: d.price, responses: d.responses, pct: d.responses/total*100, pctAcceptAtOrAbove: (total - cum + d.responses)/total*100 };
+    return { price: d.price, responses: d.responses, pctAbove: (total - cum + d.responses)/total*100 };
   });
 }
 
-/* Prospect-theory value function */
-function prospectValue(x, alpha=0.88, lambda=2.25) {
-  return x >= 0 ? Math.pow(x, alpha) : -lambda * Math.pow(-x, alpha);
+const prospectValue = (x, a=0.88, l=2.25) => x >= 0 ? Math.pow(x,a) : -l*Math.pow(-x,a);
+
+function pctAccepting(data, p) {
+  const total = data.reduce((s,d)=>s+d.responses,0);
+  const accept = data.filter(d => d.price >= p).reduce((s,d)=>s+d.responses,0);
+  return (accept/total)*100;
 }
 
-/* ---------- SMALL COMPONENTS ---------- */
-function Pill({ active, onClick, children, color='blue' }) {
-  const cls = active ? 'pill active' : 'pill';
-  return <button className={cls} onClick={onClick}>{children}</button>;
-}
+/* ============================================================
+   UI ATOMS
+   ============================================================ */
+const Pill = ({active, onClick, children}) => (
+  <button className={active ? 'pill active' : 'pill'} onClick={onClick}>{children}</button>
+);
+const KPI = ({label, value, color}) => (
+  <div className="kpi">
+    <div className="label">{label}</div>
+    <div className={`value ${color||''}`}>{value}</div>
+  </div>
+);
+const GraphPicker = ({options, selected, setSelected}) => (
+  <div className="row" style={{gap:8}}>
+    {options.map(o => {
+      const on = selected.includes(o.k);
+      return (
+        <label key={o.k} className={`chip ${on ? (o.group==='psych' ? 'active-orange' : 'active') : ''}`} onClick={() => {
+          if (on) setSelected(selected.filter(x=>x!==o.k));
+          else setSelected([...selected, o.k]);
+        }}>
+          <input type="checkbox" checked={on} readOnly /> {o.label}
+        </label>
+      );
+    })}
+  </div>
+);
 
-function KPI({ label, value, color }) {
-  return (
-    <div className="kpi">
-      <div className="label">{label}</div>
-      <div className={`value ${color||''}`}>{value}</div>
-    </div>
-  );
-}
-
-function GraphPicker({ options, selected, setSelected }) {
-  return (
-    <div className="row" style={{gap:8}}>
-      {options.map(o => {
-        const on = selected.includes(o.k);
-        return (
-          <label key={o.k} className={`chip ${on ? (o.group==='psych' ? 'active-orange' : 'active') : ''}`} onClick={() => {
-            if (on) setSelected(selected.filter(x=>x!==o.k));
-            else setSelected([...selected, o.k]);
-          }}>
-            <input type="checkbox" checked={on} readOnly /> {o.label}
-          </label>
-        );
-      })}
-    </div>
-  );
-}
-
-/* ---------- APP ---------- */
+/* ============================================================
+   APP
+   ============================================================ */
 function App() {
   const [period, setPeriod] = useState('day');
   const [version, setVersion] = useState('standard');
   const [competitors, setCompetitors] = useState(COMPETITORS_DEFAULT);
   const [ourPrices, setOurPrices] = useState(OUR_DEFAULT);
-  const [tab, setTab] = useState('overview');
+  const [tab, setTab] = useState('guide');
 
-  /* Dynamic graph picker state (per tab) */
   const [overviewGraphs, setOverviewGraphs] = useState(['wtp','profit','competitive']);
   const [psychGraphs, setPsychGraphs] = useState(['anchor','charm','prospect','reference']);
 
-  /* Psychological factor controls */
   const [charmTest, setCharmTest] = useState({ round: 80, charm: 79 });
   const [anchorTier, setAnchorTier] = useState({ basic: 60, mid: 80, premium: 100 });
   const [refPrice, setRefPrice] = useState(85);
-
-  /* Position note (free text that ships with the download) */
   const [positionNote, setPositionNote] = useState('');
+
+  const [downloading, setDownloading] = useState(false);
+  const [downloadStatus, setDownloadStatus] = useState(null);
 
   const curSurvey = SURVEY[period][version];
   const curCosts  = COSTS[version];
@@ -306,66 +320,52 @@ function App() {
   const peakStd   = useMemo(()=>findPeak(curveStd),  [curveStd]);
   const peakPrem  = useMemo(()=>findPeak(curvePrem), [curvePrem]);
   const curCurve  = version === 'standard' ? curveStd  : curvePrem;
-  const curPeak   = version === 'standard' ? peakStd   : peakPrem;
 
-  const updateCompetitor = (comp, ver, val) => {
+  const updateCompetitor = (comp, ver, val) =>
     setCompetitors(prev => ({ ...prev, [period]: { ...prev[period], [comp]: { ...prev[period][comp], [ver]: parseFloat(val)||0 } } }));
-  };
-  const updateOurs = (ver, val) => {
-    setOurPrices(prev => ({ ...prev, [period]: { ...prev[period], [ver]: parseFloat(val)||0 } }));
-  };
 
   const compData = [
     { name: 'Nomade Vans', standard: ourPrices[period].standard, premium: ourPrices[period].premium, color: '#f97316', isUs: true },
     ...COMP_META.map(c => ({ name: c.name, standard: competitors[period][c.k].standard, premium: competitors[period][c.k].premium, color: c.color, isUs: false }))
   ];
-
-  /* Nomade vs competitor-average gap (used to compute positioning) */
   const avgCompStd  = COMP_META.reduce((s,c)=>s+competitors[period][c.k].standard,0) / COMP_META.length;
   const avgCompPrem = COMP_META.reduce((s,c)=>s+competitors[period][c.k].premium,0) / COMP_META.length;
   const gapStd  = ourPrices[period].standard - avgCompStd;
   const gapPrem = ourPrices[period].premium  - avgCompPrem;
-
-  /* % of respondents accepting our price (at or above) */
-  function pctAccepting(data, p) {
-    const total = data.reduce((s,d)=>s+d.responses,0);
-    const accept = data.filter(d => d.price >= p).reduce((s,d)=>s+d.responses,0);
-    return (accept/total)*100;
-  }
   const pctAcceptStd  = pctAccepting(SURVEY[period].standard, ourPrices[period].standard);
   const pctAcceptPrem = pctAccepting(SURVEY[period].premium,  ourPrices[period].premium);
 
-  /* ---------- Chart builders ---------- */
-  const WTPChart = () => {
+  /* ---------- Chart components (accept w,h so the offscreen copy can render fixed-size) ---------- */
+  const wtpData = useMemo(() => {
     const cum = wtpCumulative(curSurvey);
-    const data = curSurvey.map(d => ({ ...d, pctAbove: (cum.find(c=>c.price===d.price)||{}).pctAcceptAtOrAbove || 0 }));
-    const ours = ourPrices[period][version];
-    return (
-      <ResponsiveContainer width="100%" height={320}>
-        <ComposedChart data={data}>
-          <CartesianGrid strokeDasharray="3 3" />
-          <XAxis dataKey="price" />
-          <YAxis yAxisId="l" label={{ value:'Responses', angle:-90, position:'insideLeft' }} />
-          <YAxis yAxisId="r" orientation="right" label={{ value:'% accept ≥ price', angle:90, position:'insideRight' }} />
-          <Tooltip />
-          <Legend />
-          <Bar yAxisId="l" dataKey="responses" name="Responses" fill={version==='standard' ? '#3b82f6' : '#f97316'} />
-          <Line yAxisId="r" type="monotone" dataKey="pctAbove" name="Cum. acceptance %" stroke="#10b981" strokeWidth={2} />
-          <ReferenceLine yAxisId="l" x={ours} stroke="#f97316" strokeWidth={2} strokeDasharray="4 4" label={{ value:`Our €${ours}`, fill:'#f97316', position:'top' }} />
-        </ComposedChart>
-      </ResponsiveContainer>
-    );
-  };
+    return curSurvey.map(d => ({ ...d, pctAbove: (cum.find(c=>c.price===d.price)||{}).pctAbove || 0 }));
+  }, [curSurvey]);
 
-  const ProfitChart = () => (
-    <ResponsiveContainer width="100%" height={340}>
+  const WTPChart = ({h=320, w="100%"}) => (
+    <ResponsiveContainer width={w} height={h}>
+      <ComposedChart data={wtpData}>
+        <CartesianGrid strokeDasharray="3 3" />
+        <XAxis dataKey="price" />
+        <YAxis yAxisId="l" />
+        <YAxis yAxisId="r" orientation="right" />
+        <Tooltip />
+        <Legend />
+        <Bar yAxisId="l" dataKey="responses" name="Responses" fill={version==='standard' ? '#3b82f6' : '#f97316'} />
+        <Line yAxisId="r" type="monotone" dataKey="pctAbove" name="Cum. accept % (≥ price)" stroke="#10b981" strokeWidth={2} />
+        <ReferenceLine yAxisId="l" x={ourPrices[period][version]} stroke="#f97316" strokeWidth={2} strokeDasharray="4 4" label={{ value:`Our €${ourPrices[period][version]}`, fill:'#f97316', position:'top' }} />
+      </ComposedChart>
+    </ResponsiveContainer>
+  );
+
+  const ProfitChart = ({h=340, w="100%"}) => (
+    <ResponsiveContainer width={w} height={h}>
       <LineChart data={curCurve}>
         <CartesianGrid strokeDasharray="3 3" />
-        <XAxis dataKey="price" label={{ value:'Price (€)', position:'insideBottom', offset:-5 }} />
-        <YAxis label={{ value:'Profit (€)', angle:-90, position:'insideLeft' }} />
+        <XAxis dataKey="price" />
+        <YAxis />
         <Tooltip formatter={v => `€${Number(v).toLocaleString()}`} />
         <Legend />
-        <ReferenceLine x={peakStd.price} stroke="#3b82f6" strokeDasharray="5 5" label={{ value:`Std opt €${peakStd.price}`, position:'top', fill:'#3b82f6' }}/>
+        <ReferenceLine x={peakStd.price}  stroke="#3b82f6" strokeDasharray="5 5" label={{ value:`Std opt €${peakStd.price}`,  position:'top', fill:'#3b82f6' }}/>
         <ReferenceLine x={peakPrem.price} stroke="#f97316" strokeDasharray="5 5" label={{ value:`Prem opt €${peakPrem.price}`, position:'top', fill:'#f97316' }}/>
         <ReferenceLine x={ourPrices[period][version]} stroke="#059669" strokeWidth={2} label={{ value:`Our €${ourPrices[period][version]}`, position:'bottom', fill:'#059669' }}/>
         <Line type="monotone" dataKey="profit" stroke={version==='standard' ? '#3b82f6' : '#f97316'} strokeWidth={3} dot={false} name={version==='standard'?'Standard profit':'Premium profit'} />
@@ -373,114 +373,91 @@ function App() {
     </ResponsiveContainer>
   );
 
-  const CompetitiveChart = () => (
-    <ResponsiveContainer width="100%" height={340}>
+  const DemandChart = ({h=300, w="100%"}) => (
+    <ResponsiveContainer width={w} height={h}>
+      <ComposedChart data={curCurve}>
+        <CartesianGrid strokeDasharray="3 3" />
+        <XAxis dataKey="price" />
+        <YAxis yAxisId="l" />
+        <YAxis yAxisId="r" orientation="right" />
+        <Tooltip />
+        <Legend />
+        <Line yAxisId="l" type="monotone" dataKey="demand"  stroke="#2563eb" strokeWidth={2} dot={false} name="Demand (rentals)" />
+        <Line yAxisId="r" type="monotone" dataKey="revenue" stroke="#f97316" strokeWidth={2} dot={false} name="Revenue (€)" />
+      </ComposedChart>
+    </ResponsiveContainer>
+  );
+
+  const CompetitiveChart = ({h=340, w="100%"}) => (
+    <ResponsiveContainer width={w} height={h}>
       <BarChart data={compData}>
         <CartesianGrid strokeDasharray="3 3" />
         <XAxis dataKey="name" angle={-12} textAnchor="end" height={70} />
-        <YAxis label={{ value:'Price (€)', angle:-90, position:'insideLeft' }} />
+        <YAxis />
         <Tooltip />
         <Legend />
-        <ReferenceLine y={peakStd.price} stroke="#3b82f6" strokeDasharray="5 5" label={{ value:`Std opt €${peakStd.price}`, position:'insideRight', fill:'#3b82f6' }}/>
+        <ReferenceLine y={peakStd.price}  stroke="#3b82f6" strokeDasharray="5 5" label={{ value:`Std opt €${peakStd.price}`,  position:'insideRight', fill:'#3b82f6' }}/>
         <ReferenceLine y={peakPrem.price} stroke="#f97316" strokeDasharray="5 5" label={{ value:`Prem opt €${peakPrem.price}`, position:'insideRight', fill:'#f97316' }}/>
-        <Bar dataKey="standard" name="Standard">
-          {compData.map((e,i)=><Cell key={'s'+i} fill={e.color} />)}
-        </Bar>
-        <Bar dataKey="premium" name="Premium">
-          {compData.map((e,i)=><Cell key={'p'+i} fill={e.color} opacity={.6} />)}
-        </Bar>
+        <Bar dataKey="standard" name="Standard">{compData.map((e,i)=><Cell key={'s'+i} fill={e.color} />)}</Bar>
+        <Bar dataKey="premium"  name="Premium" >{compData.map((e,i)=><Cell key={'p'+i} fill={e.color} opacity={.6} />)}</Bar>
       </BarChart>
     </ResponsiveContainer>
   );
 
-  const DemandChart = () => {
-    const data = curCurve.map(c => ({ price: c.price, demand: c.demand, revenue: c.revenue }));
-    return (
-      <ResponsiveContainer width="100%" height={320}>
-        <ComposedChart data={data}>
-          <CartesianGrid strokeDasharray="3 3" />
-          <XAxis dataKey="price" label={{ value:'Price (€)', position:'insideBottom', offset:-5 }} />
-          <YAxis yAxisId="l" label={{ value:'Demand (rentals)', angle:-90, position:'insideLeft' }} />
-          <YAxis yAxisId="r" orientation="right" label={{ value:'Revenue (€)', angle:90, position:'insideRight' }} />
-          <Tooltip />
-          <Legend />
-          <Line yAxisId="l" type="monotone" dataKey="demand" stroke="#2563eb" strokeWidth={2} dot={false} name="Demand" />
-          <Line yAxisId="r" type="monotone" dataKey="revenue" stroke="#f97316" strokeWidth={2} dot={false} name="Revenue" />
-        </ComposedChart>
-      </ResponsiveContainer>
-    );
-  };
-
-  const GapChart = () => {
-    /* Shows gap (€) vs each competitor */
-    const data = COMP_META.map(c => ({
-      name: c.name,
+  const GapChart = ({h=300, w="100%"}) => {
+    const data = COMP_META.map(c => ({ name: c.name,
       standardGap: ourPrices[period].standard - competitors[period][c.k].standard,
-      premiumGap:  ourPrices[period].premium  - competitors[period][c.k].premium,
-      color: c.color
-    }));
+      premiumGap:  ourPrices[period].premium  - competitors[period][c.k].premium }));
     return (
-      <ResponsiveContainer width="100%" height={300}>
+      <ResponsiveContainer width={w} height={h}>
         <BarChart data={data}>
           <CartesianGrid strokeDasharray="3 3" />
           <XAxis dataKey="name" />
-          <YAxis label={{ value:'Our price − competitor (€)', angle:-90, position:'insideLeft' }} />
+          <YAxis />
           <ReferenceLine y={0} stroke="#0f172a" />
           <Tooltip />
           <Legend />
-          <Bar dataKey="standardGap" name="Standard gap" fill="#2563eb" />
-          <Bar dataKey="premiumGap"  name="Premium gap"  fill="#f97316" />
+          <Bar dataKey="standardGap" name="Standard gap vs competitor (€)" fill="#2563eb" />
+          <Bar dataKey="premiumGap"  name="Premium gap vs competitor (€)"  fill="#f97316" />
         </BarChart>
       </ResponsiveContainer>
     );
   };
 
-  /* ---------- Psychological factor charts ---------- */
-  const AnchorChart = () => {
+  const AnchorChart = ({h=260, w="100%"}) => {
     const data = [
-      { name: 'Basic', price: anchorTier.basic, label: 'loss in quality' },
-      { name: 'Middle (target)', price: anchorTier.mid, label: 'sandwich — preferred' },
-      { name: 'Premium anchor', price: anchorTier.premium, label: 'loss in cost' }
+      { name: 'Basic',            price: anchorTier.basic },
+      { name: 'Middle (target)',  price: anchorTier.mid },
+      { name: 'Premium anchor',   price: anchorTier.premium }
     ];
     return (
-      <ResponsiveContainer width="100%" height={280}>
+      <ResponsiveContainer width={w} height={h}>
         <BarChart data={data}>
           <CartesianGrid strokeDasharray="3 3" />
-          <XAxis dataKey="name" />
-          <YAxis label={{ value:'Price (€)', angle:-90, position:'insideLeft' }} />
-          <Tooltip formatter={v => `€${v}`} />
-          <Bar dataKey="price">
-            <Cell fill="#94a3b8" />
-            <Cell fill="#059669" />
-            <Cell fill="#dc2626" />
-          </Bar>
+          <XAxis dataKey="name" /><YAxis />
+          <Tooltip formatter={v=>`€${v}`} />
+          <Bar dataKey="price"><Cell fill="#94a3b8"/><Cell fill="#059669"/><Cell fill="#dc2626"/></Bar>
         </BarChart>
       </ResponsiveContainer>
     );
   };
 
-  const CharmChart = () => {
-    /* Simulates what share of WTP responses will 'feel' each price is affordable.
-       Charm pricing narrative: €79 perceived closer to €70 than €80 by digit-left effect. */
+  const CharmChart = ({h=260, w="100%"}) => {
     const left1 = Math.floor(charmTest.round/10);
     const left2 = Math.floor(charmTest.charm/10);
     const demandRound = interpolateDemand(curSurvey, charmTest.round, curCosts.D * DEMAND_MULT[period]);
-    /* apply a 'perception boost' when left digit drops */
     const boost = left2 < left1 ? 1.07 : 1.0;
     const demandCharm = interpolateDemand(curSurvey, charmTest.charm, curCosts.D * DEMAND_MULT[period]) * boost;
     const data = [
-      { name: `€${charmTest.round} (round)`, demand: Math.round(demandRound),  profit: Math.round(demandRound * (charmTest.round - curCosts.VC) - curCosts.FC) },
-      { name: `€${charmTest.charm} (charm)`, demand: Math.round(demandCharm),  profit: Math.round(demandCharm * (charmTest.charm - curCosts.VC) - curCosts.FC) }
+      { name: `€${charmTest.round} (round)`, demand: Math.round(demandRound), profit: Math.round(demandRound*(charmTest.round-curCosts.VC)-curCosts.FC) },
+      { name: `€${charmTest.charm} (charm)`, demand: Math.round(demandCharm), profit: Math.round(demandCharm*(charmTest.charm-curCosts.VC)-curCosts.FC) }
     ];
     return (
-      <ResponsiveContainer width="100%" height={260}>
+      <ResponsiveContainer width={w} height={h}>
         <BarChart data={data}>
           <CartesianGrid strokeDasharray="3 3" />
-          <XAxis dataKey="name" />
-          <YAxis yAxisId="l" />
-          <YAxis yAxisId="r" orientation="right" />
-          <Tooltip formatter={v => Number(v).toLocaleString()} />
-          <Legend />
+          <XAxis dataKey="name" /><YAxis yAxisId="l" /><YAxis yAxisId="r" orientation="right" />
+          <Tooltip /><Legend />
           <Bar yAxisId="l" dataKey="demand" name="Expected demand" fill="#2563eb" />
           <Bar yAxisId="r" dataKey="profit" name="Profit (€)" fill="#f97316" />
         </BarChart>
@@ -488,26 +465,23 @@ function App() {
     );
   };
 
-  const ProspectChart = () => {
+  const ProspectChart = ({h=280, w="100%"}) => {
     const pts = [];
     for (let x = -50; x <= 50; x += 2) pts.push({ gainLoss: x, value: Math.round(prospectValue(x)*100)/100 });
     return (
-      <ResponsiveContainer width="100%" height={280}>
+      <ResponsiveContainer width={w} height={h}>
         <LineChart data={pts}>
           <CartesianGrid strokeDasharray="3 3" />
-          <XAxis dataKey="gainLoss" label={{ value:'Gain/Loss (€)', position:'insideBottom', offset:-5 }} />
-          <YAxis label={{ value:'Perceived value', angle:-90, position:'insideLeft' }} />
-          <ReferenceLine x={0} stroke="#0f172a" />
-          <ReferenceLine y={0} stroke="#0f172a" />
+          <XAxis dataKey="gainLoss" /><YAxis />
+          <ReferenceLine x={0} stroke="#0f172a" /><ReferenceLine y={0} stroke="#0f172a" />
           <Tooltip />
-          <Line type="monotone" dataKey="value" stroke="#7c3aed" strokeWidth={3} dot={false} name="v(x) = x^α / −λ(−x)^α" />
+          <Line type="monotone" dataKey="value" stroke="#7c3aed" strokeWidth={3} dot={false} name="Perceived value" />
         </LineChart>
       </ResponsiveContainer>
     );
   };
 
-  const ReferenceChart = () => {
-    /* How respondents' WTP compares to a reference price */
+  const ReferenceChart = ({h=260, w="100%"}) => {
     const below = curSurvey.filter(d => d.price <  refPrice).reduce((s,d)=>s+d.responses,0);
     const at    = curSurvey.filter(d => d.price === refPrice).reduce((s,d)=>s+d.responses,0);
     const above = curSurvey.filter(d => d.price >  refPrice).reduce((s,d)=>s+d.responses,0);
@@ -517,151 +491,222 @@ function App() {
       { name: `Above €${refPrice}`, value: above, fill:'#059669' }
     ];
     return (
-      <ResponsiveContainer width="100%" height={260}>
+      <ResponsiveContainer width={w} height={h}>
         <BarChart data={data}>
           <CartesianGrid strokeDasharray="3 3" />
-          <XAxis dataKey="name" />
-          <YAxis />
+          <XAxis dataKey="name" /><YAxis />
           <Tooltip />
-          <Bar dataKey="value">
-            {data.map((d,i)=><Cell key={i} fill={d.fill} />)}
-          </Bar>
+          <Bar dataKey="value">{data.map((d,i)=><Cell key={i} fill={d.fill} />)}</Bar>
         </BarChart>
       </ResponsiveContainer>
     );
   };
 
-  /* ---------- Download handlers ---------- */
-  const now = new Date().toISOString();
-  const position = {
-    generatedAt: now,
-    period,
-    version,
-    ourPrices,
-    competitors,
-    peakStandard: { price: peakStd.price, demand: peakStd.demand, revenue: peakStd.revenue, profit: peakStd.profit },
-    peakPremium:  { price: peakPrem.price, demand: peakPrem.demand, revenue: peakPrem.revenue, profit: peakPrem.profit },
-    gapVsAverage: { standard: Math.round(gapStd*100)/100, premium: Math.round(gapPrem*100)/100 },
-    wtpAcceptance: { standard: Math.round(pctAcceptStd*100)/100 + '%', premium: Math.round(pctAcceptPrem*100)/100 + '%' },
-    psychologicalFactorsUsed: {
-      anchoring: anchorTier,
-      charmPricing: charmTest,
-      referencePrice: refPrice
-    },
-    analystNote: positionNote
+  const CHART_CATALOG = [
+    { k:'wtp',         label:'WTP distribution',        C: WTPChart,         group:'overview' },
+    { k:'profit',      label:'Profit curve',            C: ProfitChart,      group:'overview' },
+    { k:'demand',      label:'Demand + Revenue',        C: DemandChart,      group:'overview' },
+    { k:'competitive', label:'Competitive positioning', C: CompetitiveChart, group:'overview' },
+    { k:'gap',         label:'Gap vs competitors',      C: GapChart,         group:'overview' },
+    { k:'anchor',      label:'Anchoring / Sandwich',    C: AnchorChart,      group:'psych' },
+    { k:'charm',       label:'Charm pricing (digit 9)', C: CharmChart,       group:'psych' },
+    { k:'prospect',    label:'Prospect Theory',         C: ProspectChart,    group:'psych' },
+    { k:'reference',   label:'Reference price',         C: ReferenceChart,   group:'psych' }
+  ];
+
+  /* ============================================================
+     Export — SVG → PNG → Excel
+     ============================================================ */
+  const svgToPngDataUrl = async (svgEl, scale = 2) => {
+    const clone = svgEl.cloneNode(true);
+    const w = svgEl.clientWidth  || svgEl.getBoundingClientRect().width  || 860;
+    const h = svgEl.clientHeight || svgEl.getBoundingClientRect().height || 380;
+    clone.setAttribute('width',  w);
+    clone.setAttribute('height', h);
+    clone.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
+    const xml = new XMLSerializer().serializeToString(clone);
+    const b64 = btoa(unescape(encodeURIComponent(xml)));
+    const img = new Image();
+    img.src = 'data:image/svg+xml;base64,' + b64;
+    await new Promise((res, rej) => { img.onload = res; img.onerror = rej; });
+    const canvas = document.createElement('canvas');
+    canvas.width  = w * scale;
+    canvas.height = h * scale;
+    const ctx = canvas.getContext('2d');
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.scale(scale, scale);
+    ctx.drawImage(img, 0, 0, w, h);
+    return canvas.toDataURL('image/png');
   };
 
-  const downloadJSON = () => {
-    const payload = {
-      questionnaire: QUESTIONS,
-      surveyAggregates: SURVEY,
-      simulatorPosition: position
-    };
-    const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
-    const a = document.createElement('a');
-    a.href = URL.createObjectURL(blob);
-    a.download = `nomade-simulator-${period}-${version}.json`;
-    a.click();
-    URL.revokeObjectURL(a.href);
-  };
-
-  const downloadCSV = () => {
-    const rows = [];
-    rows.push(['SECTION','Questions']);
-    rows.push(['Question ID','Question text']);
-    QUESTIONS.forEach(q => rows.push([q.id, q.text]));
-    rows.push([]);
-    rows.push(['SECTION','Survey aggregates']);
-    rows.push(['Period','Version','Price (€)','Responses']);
-    for (const p of ['day','weekend','week']) {
-      for (const v of ['standard','premium']) {
-        for (const r of SURVEY[p][v]) rows.push([p, v, r.price, r.responses]);
+  const buildExcel = async () => {
+    setDownloading(true);
+    setDownloadStatus({kind:'info', text:'Rendering charts…'});
+    await new Promise(r => setTimeout(r, 60));
+    try {
+      const images = {};
+      for (const c of CHART_CATALOG) {
+        const host = document.getElementById('cap-' + c.k);
+        if (!host) continue;
+        const svg = host.querySelector('svg');
+        if (!svg) continue;
+        try { images[c.k] = await svgToPngDataUrl(svg, 2); } catch (e) { console.warn('skip', c.k, e); }
       }
-    }
-    rows.push([]);
-    rows.push(['SECTION','Simulator position']);
-    rows.push(['Field','Value']);
-    rows.push(['Generated at', now]);
-    rows.push(['Active period', period]);
-    rows.push(['Active version', version]);
-    for (const p of ['day','weekend','week']) {
-      rows.push([`Our ${p} standard (€)`, ourPrices[p].standard]);
-      rows.push([`Our ${p} premium (€)`,  ourPrices[p].premium]);
+
+      setDownloadStatus({kind:'info', text:'Building workbook…'});
+      const wb = new ExcelJS.Workbook();
+      wb.creator = 'Nomade Vans pricing simulator';
+      wb.created = new Date();
+
+      /* Sheet 1: Guide */
+      const s1 = wb.addWorksheet('Guide');
+      s1.columns = [{ width: 26 }, { width: 90 }];
+      const g = [
+        ['Nomade Vans — Pricing Simulator', ''],
+        ['Generated at', new Date().toISOString()],
+        ['', ''],
+        ['How to read this file', ''],
+        ['Guide',               'This sheet — what the other sheets contain.'],
+        ['Questions',           'The 13 questions asked to the 90 survey respondents.'],
+        ['Answers — Day',       'Aggregated answers to the "day" WTP questions (Standard & Premium).'],
+        ['Answers — Weekend',   'Same for the weekend rate.'],
+        ['Answers — Week',      'Same for the weekly rate.'],
+        ['Position',            'The prices you set in the simulator and the resulting KPIs.'],
+        ['Charts',              'All 9 charts from the simulator, embedded as images.'],
+        ['', ''],
+        ['Your active view when downloading', ''],
+        ['Period',              period],
+        ['Version',             version],
+        ['Our standard price (€)', ourPrices[period].standard],
+        ['Our premium price (€)',  ourPrices[period].premium],
+        ['Analyst note',        positionNote || '(none)']
+      ];
+      g.forEach((r,i) => {
+        const row = s1.addRow(r);
+        if (i === 0) row.font = { bold: true, size: 14 };
+        if (['How to read this file','Your active view when downloading'].includes(r[0])) row.font = { bold: true };
+      });
+
+      /* Sheet 2: Questions */
+      const s2 = wb.addWorksheet('Questions');
+      s2.columns = [
+        { header: 'ID',       key: 'id',      width: 8 },
+        { header: 'Question', key: 'text',    width: 60 },
+        { header: 'Type',     key: 'type',    width: 20 },
+        { header: 'Options / Range', key: 'options', width: 40 }
+      ];
+      s2.getRow(1).font = { bold: true };
+      QUESTIONS.forEach(q => s2.addRow(q));
+
+      /* Sheets 3–5: Answers per period */
+      for (const p of PERIODS) {
+        const shortLabel = p.label.split(' ')[0];
+        const s = wb.addWorksheet('Answers — ' + shortLabel);
+        s.columns = [
+          { header: 'Period',    key:'period',    width: 10 },
+          { header: 'Version',   key:'version',   width: 12 },
+          { header: 'Price (€)', key:'price',     width: 10 },
+          { header: 'Responses', key:'responses', width: 10 },
+          { header: '% of respondents', key:'pct', width: 18 },
+          { header: 'Cum. % accepting ≥ price', key:'pctAbove', width: 28 }
+        ];
+        s.getRow(1).font = { bold: true };
+        for (const v of ['standard','premium']) {
+          const cum = wtpCumulative(SURVEY[p.k][v]);
+          const total = SURVEY[p.k][v].reduce((a,d)=>a+d.responses,0);
+          for (const r of SURVEY[p.k][v]) {
+            const pAbove = (cum.find(c=>c.price===r.price)||{}).pctAbove || 0;
+            s.addRow({
+              period: p.k, version: v,
+              price: r.price, responses: r.responses,
+              pct: Math.round(r.responses/total*1000)/10,
+              pctAbove: Math.round(pAbove*10)/10
+            });
+          }
+        }
+      }
+
+      /* Sheet 6: Position */
+      const s6 = wb.addWorksheet('Position');
+      s6.columns = [{ width: 40 }, { width: 22 }];
+      s6.addRow(['Simulator position snapshot']).font = { bold: true, size: 13 };
+      s6.addRow([]);
+      s6.addRow(['— Our prices —']).font = { bold: true };
+      for (const p of PERIODS) {
+        s6.addRow(['Our ' + p.k + ' standard (€)', ourPrices[p.k].standard]);
+        s6.addRow(['Our ' + p.k + ' premium (€)',  ourPrices[p.k].premium]);
+      }
+      s6.addRow([]);
+      s6.addRow(['— Competitor prices (active period: ' + period + ') —']).font = { bold: true };
       for (const c of COMP_META) {
-        rows.push([`${c.name} ${p} standard (€)`, competitors[p][c.k].standard]);
-        rows.push([`${c.name} ${p} premium (€)`,  competitors[p][c.k].premium]);
+        s6.addRow([c.name + ' standard (€)', competitors[period][c.k].standard]);
+        s6.addRow([c.name + ' premium (€)',  competitors[period][c.k].premium]);
       }
+      s6.addRow([]);
+      s6.addRow(['— KPIs (active view) —']).font = { bold: true };
+      s6.addRow(['Active period', period]);
+      s6.addRow(['Active version', version]);
+      s6.addRow(['Peak profit — standard (price €)', peakStd.price]);
+      s6.addRow(['Peak profit — standard (€)',       peakStd.profit]);
+      s6.addRow(['Peak profit — premium (price €)',  peakPrem.price]);
+      s6.addRow(['Peak profit — premium (€)',        peakPrem.profit]);
+      s6.addRow(['Gap vs avg competitor — standard (€)', Math.round(gapStd*100)/100]);
+      s6.addRow(['Gap vs avg competitor — premium (€)',  Math.round(gapPrem*100)/100]);
+      s6.addRow(['Acceptance % — standard', Math.round(pctAcceptStd*10)/10]);
+      s6.addRow(['Acceptance % — premium',  Math.round(pctAcceptPrem*10)/10]);
+      s6.addRow([]);
+      s6.addRow(['— Psychological parameters —']).font = { bold: true };
+      s6.addRow(['Anchoring — basic (€)',   anchorTier.basic]);
+      s6.addRow(['Anchoring — middle (€)',  anchorTier.mid]);
+      s6.addRow(['Anchoring — premium (€)', anchorTier.premium]);
+      s6.addRow(['Charm — round price (€)', charmTest.round]);
+      s6.addRow(['Charm — charm price (€)', charmTest.charm]);
+      s6.addRow(['Reference price (€)',     refPrice]);
+      s6.addRow([]);
+      s6.addRow(['Analyst note', positionNote || '(none)']);
+
+      /* Sheet 7: Charts */
+      const s7 = wb.addWorksheet('Charts');
+      s7.columns = [{ width: 4 }, { width: 110 }];
+      s7.addRow(['', 'Charts captured from the simulator']).getCell(2).font = { bold: true, size: 14 };
+      let rowCursor = 3;
+      for (const c of CHART_CATALOG) {
+        const dataUrl = images[c.k];
+        if (!dataUrl) continue;
+        const labelCell = s7.getCell(rowCursor, 2);
+        labelCell.value = c.label;
+        labelCell.font = { bold: true };
+        const imgId = wb.addImage({ base64: dataUrl, extension: 'png' });
+        s7.addImage(imgId, {
+          tl:  { col: 1, row: rowCursor },
+          ext: { width: 720, height: 320 }
+        });
+        rowCursor += 22;
+      }
+
+      const buf = await wb.xlsx.writeBuffer();
+      const blob = new Blob([buf], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = `nomade-simulator-${period}-${version}-${new Date().toISOString().slice(0,10)}.xlsx`;
+      a.click();
+      URL.revokeObjectURL(a.href);
+
+      setDownloadStatus({kind:'ok', text:`Downloaded ${a.download}`});
+    } catch (err) {
+      console.error(err);
+      setDownloadStatus({kind:'err', text:'Error: ' + (err.message || err)});
+    } finally {
+      setDownloading(false);
     }
-    rows.push(['Peak profit price — standard (€)', peakStd.price]);
-    rows.push(['Peak profit — standard (€)', peakStd.profit]);
-    rows.push(['Peak profit price — premium  (€)', peakPrem.price]);
-    rows.push(['Peak profit — premium  (€)', peakPrem.profit]);
-    rows.push(['Gap vs avg competitor — standard (€)', Math.round(gapStd*100)/100]);
-    rows.push(['Gap vs avg competitor — premium  (€)', Math.round(gapPrem*100)/100]);
-    rows.push(['WTP acceptance — standard (%)', Math.round(pctAcceptStd*100)/100]);
-    rows.push(['WTP acceptance — premium  (%)', Math.round(pctAcceptPrem*100)/100]);
-    rows.push(['Anchoring — basic',   anchorTier.basic]);
-    rows.push(['Anchoring — middle',  anchorTier.mid]);
-    rows.push(['Anchoring — premium', anchorTier.premium]);
-    rows.push(['Charm pricing — round price', charmTest.round]);
-    rows.push(['Charm pricing — charm price', charmTest.charm]);
-    rows.push(['Reference price',     refPrice]);
-    rows.push(['Analyst note',        (positionNote||'').replace(/"/g,'""')]);
-
-    const csv = rows.map(r => r.map(c => {
-      const s = c===undefined||c===null ? '' : String(c);
-      return /[",\n;]/.test(s) ? `"${s.replace(/"/g,'""')}"` : s;
-    }).join(',')).join('\n');
-
-    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
-    const a = document.createElement('a');
-    a.href = URL.createObjectURL(blob);
-    a.download = `nomade-simulator-${period}-${version}.csv`;
-    a.click();
-    URL.revokeObjectURL(a.href);
   };
 
-  /* ---------- Graph catalog (for the dynamic picker) ---------- */
-  const OVERVIEW_GRAPHS = [
-    { k:'wtp',         label:'WTP distribution',       group:'overview' },
-    { k:'profit',      label:'Profit curve',           group:'overview' },
-    { k:'demand',      label:'Demand + Revenue',       group:'overview' },
-    { k:'competitive', label:'Competitive positioning',group:'overview' },
-    { k:'gap',         label:'Gap vs competitors',     group:'overview' }
-  ];
-  const PSYCH_GRAPHS = [
-    { k:'anchor',    label:'Anchoring / Sandwich',   group:'psych' },
-    { k:'charm',     label:'Charm pricing (digit 9)',group:'psych' },
-    { k:'prospect',  label:'Prospect Theory',        group:'psych' },
-    { k:'reference', label:'Reference price',        group:'psych' }
-  ];
+  /* ============================================================
+     RENDER
+     ============================================================ */
+  const periodLabel = PERIODS.find(p=>p.k===period).label;
 
-  const GraphBlock = ({k}) => {
-    const titles = {
-      wtp:'WTP distribution & cumulative acceptance',
-      profit:'Profit curve',
-      demand:'Demand + Revenue',
-      competitive:'Competitive positioning',
-      gap:'Gap vs competitors',
-      anchor:'Good-Better-Best (Anchoring)',
-      charm:'Charm pricing (round vs digit-9)',
-      prospect:'Prospect Theory value function',
-      reference:'Reference price — respondents around threshold'
-    };
-    const C = {
-      wtp:<WTPChart/>, profit:<ProfitChart/>, demand:<DemandChart/>,
-      competitive:<CompetitiveChart/>, gap:<GapChart/>,
-      anchor:<AnchorChart/>, charm:<CharmChart/>, prospect:<ProspectChart/>, reference:<ReferenceChart/>
-    }[k];
-    return (
-      <div className="card" key={k}>
-        <h3>{titles[k]}</h3>
-        {C}
-      </div>
-    );
-  };
-
-  /* ---------- Render ---------- */
   return (
     <div className="wrap">
       <div className="hero">
@@ -669,16 +714,13 @@ function App() {
         <p>WTP • Competition-based pricing • Psychological factors — interactive, shareable, exportable.</p>
       </div>
 
-      {/* Master controls */}
+      {/* Global controls */}
       <div className="card">
         <div className="grid-2">
           <div>
             <label>Rental period</label>
-            <div className="row">
-              {PERIODS.map(p =>
-                <Pill key={p.k} active={period===p.k} onClick={()=>setPeriod(p.k)}>{p.label}</Pill>
-              )}
-            </div>
+            <div className="row">{PERIODS.map(p => <Pill key={p.k} active={period===p.k} onClick={()=>setPeriod(p.k)}>{p.label}</Pill>)}</div>
+            <p className="hint">What do you want to price — a single day, a 2-night weekend or a 6-night week?</p>
           </div>
           <div>
             <label>Version</label>
@@ -686,6 +728,7 @@ function App() {
               <Pill active={version==='standard'} onClick={()=>setVersion('standard')}>Standard</Pill>
               <Pill active={version==='premium'}  onClick={()=>setVersion('premium')}>Premium</Pill>
             </div>
+            <p className="hint">Switch between the two vehicle trims. Most charts adapt to this choice.</p>
           </div>
         </div>
 
@@ -696,191 +739,281 @@ function App() {
           <KPI label="Our prem price"  value={`€${ourPrices[period].premium}`} />
         </div>
         <div className="grid-4" style={{marginTop:10}}>
-          <KPI label="Acceptance % — std"  value={`${pctAcceptStd.toFixed(1)}%`}  color={pctAcceptStd>50?'green':'red'} />
-          <KPI label="Acceptance % — prem" value={`${pctAcceptPrem.toFixed(1)}%`} color={pctAcceptPrem>50?'green':'red'} />
-          <KPI label="Gap vs avg (std)"    value={`${gapStd>=0?'+':''}€${gapStd.toFixed(1)}`}  color={gapStd>0?'red':'green'} />
-          <KPI label="Gap vs avg (prem)"   value={`${gapPrem>=0?'+':''}€${gapPrem.toFixed(1)}`} color={gapPrem>0?'red':'green'} />
+          <KPI label="Acceptance — std"  value={`${pctAcceptStd.toFixed(1)}%`}  color={pctAcceptStd>50?'green':'red'} />
+          <KPI label="Acceptance — prem" value={`${pctAcceptPrem.toFixed(1)}%`} color={pctAcceptPrem>50?'green':'red'} />
+          <KPI label="Gap vs avg (std)"  value={`${gapStd>=0?'+':''}€${gapStd.toFixed(1)}`}  color={gapStd>0?'red':'green'} />
+          <KPI label="Gap vs avg (prem)" value={`${gapPrem>=0?'+':''}€${gapPrem.toFixed(1)}`} color={gapPrem>0?'red':'green'} />
         </div>
+        <p className="hint" style={{marginTop:8}}>
+          <strong>Peak</strong> = the price that maximises profit in the WTP curve. <strong>Acceptance</strong> = share of respondents willing to pay at-or-above your price. <strong>Gap</strong> = your price minus the average of the three competitors (positive = you are more expensive).
+        </p>
       </div>
 
       {/* Tabs */}
       <div className="tab-row">
-        <button className={`tab ${tab==='overview'?'active':''}`}   onClick={()=>setTab('overview')}>Competition-based</button>
-        <button className={`tab ${tab==='psych'?'active':''}`}      onClick={()=>setTab('psych')}>Psychological factors</button>
-        <button className={`tab ${tab==='position'?'active':''}`}   onClick={()=>setTab('position')}>Position & prices</button>
-        <button className={`tab ${tab==='download'?'active':''}`}   onClick={()=>setTab('download')}>Download Q&amp;A</button>
+        <button className={`tab ${tab==='guide'?'active':''}`}    onClick={()=>setTab('guide')}>How to use</button>
+        <button className={`tab ${tab==='overview'?'active':''}`} onClick={()=>setTab('overview')}>Competition-based</button>
+        <button className={`tab ${tab==='psych'?'active':''}`}    onClick={()=>setTab('psych')}>Psychological factors</button>
+        <button className={`tab ${tab==='position'?'active':''}`} onClick={()=>setTab('position')}>Position &amp; prices</button>
+        <button className={`tab ${tab==='download'?'active':''}`} onClick={()=>setTab('download')}>Download Excel</button>
       </div>
 
-      {/* Tab — Overview / Competition-based */}
-      {tab==='overview' && (
-        <>
-          <div className="card">
-            <h2>Graph picker — Competition-based</h2>
-            <p className="note">Combine WTP, profitability and competition charts. Tick the graphs you want on the board.</p>
-            <GraphPicker options={OVERVIEW_GRAPHS} selected={overviewGraphs} setSelected={setOverviewGraphs} />
+      {/* ----- Tab: How to use ----- */}
+      {tab==='guide' && (<>
+        <div className="card">
+          <h2>How to use the simulator — in 5 steps</h2>
+          <ol className="step-list">
+            <li><strong>Pick a rental period</strong> (Daily / Weekend / Week) and a <strong>version</strong> (Standard or Premium) at the top. Everything updates automatically.</li>
+            <li>Go to <strong>Competition-based</strong>. Tick the graphs you want to see. Compare Nomade's price with the peak-profit price and with the three competitors.</li>
+            <li>Go to <strong>Psychological factors</strong>. Try a three-tier menu (anchoring), test charm pricing, explore Prospect Theory and set a reference price.</li>
+            <li>Open <strong>Position &amp; prices</strong>. Change your own prices, change the competitors', add a free-text note.</li>
+            <li>Open <strong>Download Excel</strong>. One click produces a <code>.xlsx</code> with the questions, the answers, your position and all the charts as images.</li>
+          </ol>
+        </div>
+
+        <div className="card">
+          <h2>What each tab does</h2>
+          <div className="explain">
+            <strong>Competition-based</strong> — WTP distribution from the 90-respondent survey, the profit curve (with the peak marked), demand + revenue, and where Nomade sits vs Further VAN, People Camper and Ocean Vans. Use it to justify <em>how far</em> above or below the competition you want to be.
           </div>
-          {overviewGraphs.map(k => <GraphBlock k={k} key={k} />)}
-          <div className="card">
-            <h2>Detailed price table</h2>
-            <table>
-              <thead>
-                <tr><th>Company</th><th>Standard (€)</th><th>Premium (€)</th><th>Gap (€)</th></tr>
-              </thead>
-              <tbody>
-                {compData.map((c,i) => (
-                  <tr key={i} style={c.isUs ? {background:'#fff7ed', fontWeight:600} : null}>
-                    <td><span style={{display:'inline-block', width:10, height:10, borderRadius:10, background:c.color, marginRight:8}}/>{c.name}</td>
-                    <td>€{c.standard}</td><td>€{c.premium}</td><td>€{c.premium - c.standard}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+          <div className="explain orange">
+            <strong>Psychological factors</strong> — simulations of four effects from the technical note: <em>anchoring</em> (good-better-best), <em>charm pricing</em> (€80 vs €79), <em>prospect theory</em> (losses weigh 2.25× more than gains) and <em>reference price</em>. Use them to refine how the number is <em>presented</em>.
           </div>
-        </>
-      )}
-
-      {/* Tab — Psychological factors */}
-      {tab==='psych' && (
-        <>
-          <div className="card">
-            <h2>Graph picker — Psychological factors</h2>
-            <p className="note">Explore presentation issues and fairness heuristics applied to Nomade Vans pricing.</p>
-            <GraphPicker options={PSYCH_GRAPHS} selected={psychGraphs} setSelected={setPsychGraphs} />
+          <div className="explain green">
+            <strong>Position &amp; prices</strong> — where you decide. Every number you set is included in the Excel export, so you can share or compare versions.
           </div>
+          <div className="explain purple">
+            <strong>Download Excel</strong> — one <code>.xlsx</code> with 7 sheets: Guide, Questions, Answers (day / weekend / week), Position and Charts. Charts are embedded as images.
+          </div>
+        </div>
 
-          {psychGraphs.includes('anchor') && (
-            <div className="card">
-              <h3>Anchoring — Good-Better-Best sandwich</h3>
-              <p className="note">Create a three-tier menu. Customers gravitate to the middle option.</p>
-              <div className="grid-3">
-                <div><label>Basic (€)</label><input type="number" value={anchorTier.basic} onChange={e=>setAnchorTier({...anchorTier, basic:+e.target.value})}/></div>
-                <div><label>Middle — target (€)</label><input type="number" value={anchorTier.mid} onChange={e=>setAnchorTier({...anchorTier, mid:+e.target.value})}/></div>
-                <div><label>Premium anchor (€)</label><input type="number" value={anchorTier.premium} onChange={e=>setAnchorTier({...anchorTier, premium:+e.target.value})}/></div>
-              </div>
-              <div style={{marginTop:12}}><AnchorChart /></div>
-            </div>
-          )}
+        <div className="card">
+          <h2>Glossary — click to expand</h2>
+          <details><summary>WTP — Willingness to Pay</summary><div className="note">The maximum price a respondent says they would pay for Nomade Vans. We asked 90 people for each of the 3 periods × 2 versions = 6 WTP values per person.</div></details>
+          <details><summary>Peak price</summary><div className="note">The price that maximises profit given the interpolated demand curve and the cost structure (variable €30 per rental, fixed costs €69,750 standard / €77,750 premium, demand potential 5,000).</div></details>
+          <details><summary>Acceptance %</summary><div className="note">Share of respondents whose WTP is at-or-above the price we set.</div></details>
+          <details><summary>Gap vs competitor</summary><div className="note">Your price minus the three competitors' average. Positive means you are more expensive.</div></details>
+          <details><summary>Anchoring / Sandwich</summary><div className="note">Offer 3 tiers. The "premium anchor" makes the middle option look reasonable; the "basic" makes it look worth the upgrade.</div></details>
+          <details><summary>Charm pricing</summary><div className="note">Prices ending in 9 are perceived lower than the next round number, especially when the left-most digit drops (€80 → €79).</div></details>
+          <details><summary>Prospect Theory</summary><div className="note">Kahneman &amp; Tversky: losses weigh more than gains — a discount feels smaller than a same-size price increase hurts.</div></details>
+          <details><summary>Reference price</summary><div className="note">A mental benchmark — typically the cheapest competitor or the price paid last time. Prices above the reference feel expensive.</div></details>
+        </div>
+      </>)}
 
-          {psychGraphs.includes('charm') && (
-            <div className="card">
-              <h3>Charm pricing — digit-9 effect</h3>
-              <p className="note">Compare a round price vs a charm price (e.g. €80 vs €79). The simulator applies a 7% perception uplift when the left digit drops.</p>
-              <div className="grid-2">
-                <div><label>Round price (€)</label><input type="number" value={charmTest.round} onChange={e=>setCharmTest({...charmTest, round:+e.target.value})}/></div>
-                <div><label>Charm price (€)</label><input type="number" value={charmTest.charm} onChange={e=>setCharmTest({...charmTest, charm:+e.target.value})}/></div>
-              </div>
-              <div style={{marginTop:12}}><CharmChart /></div>
-            </div>
-          )}
+      {/* ----- Tab: Competition-based ----- */}
+      {tab==='overview' && (<>
+        <div className="card">
+          <h2>Graph picker — Competition-based</h2>
+          <p className="note">Tick the graphs you want on the board. Toggle as many as you like.</p>
+          <GraphPicker options={CHART_CATALOG.filter(c=>c.group==='overview')} selected={overviewGraphs} setSelected={setOverviewGraphs} />
+        </div>
 
-          {psychGraphs.includes('prospect') && (
-            <div className="card">
-              <h3>Prospect Theory — losses weigh more than gains</h3>
-              <p className="note">v(x) = x<sup>0.88</sup> on gains and −2.25·(−x)<sup>0.88</sup> on losses. A price hike of €10 hurts much more than a discount of €10 pleases.</p>
-              <ProspectChart />
-            </div>
-          )}
-
-          {psychGraphs.includes('reference') && (
-            <div className="card">
-              <h3>Reference price</h3>
-              <p className="note">Set a reference price (e.g. the cheapest competitor or the previous market rate). See how many survey respondents fall below / at / above it.</p>
-              <div style={{maxWidth:240}}>
-                <label>Reference price (€)</label>
-                <input type="number" value={refPrice} onChange={e=>setRefPrice(+e.target.value)} />
-              </div>
-              <div style={{marginTop:12}}><ReferenceChart /></div>
-            </div>
-          )}
-        </>
-      )}
-
-      {/* Tab — Position & prices */}
-      {tab==='position' && (
-        <>
+        {overviewGraphs.includes('wtp') && (
           <div className="card">
-            <h2>Our position — Nomade Vans</h2>
-            <p className="note">These values are saved with the download so you can compare your positioning across sessions.</p>
-            <div className="grid-3">
-              {PERIODS.map(p => (
-                <div key={p.k} className="box-soft">
-                  <h3>{p.label}</h3>
-                  <label>Standard (€)</label>
-                  <input type="number" value={ourPrices[p.k].standard} onChange={e=>setOurPrices(prev=>({...prev,[p.k]:{...prev[p.k],standard:+e.target.value}}))}/>
-                  <label style={{marginTop:8}}>Premium (€)</label>
-                  <input type="number" value={ourPrices[p.k].premium} onChange={e=>setOurPrices(prev=>({...prev,[p.k]:{...prev[p.k],premium:+e.target.value}}))}/>
-                </div>
+            <h3>WTP distribution — {periodLabel} — {version}</h3>
+            <div className="explain">
+              Bars = how many of the 90 respondents said <em>this is the maximum I would pay</em>. Green line = % of respondents whose answer is <em>at-or-above</em> that price (the cumulative demand curve). Dashed orange line = <strong>your current Nomade price</strong>. The further your orange line sits on the left, the more people would accept it — but the lower your margin.
+            </div>
+            <WTPChart />
+          </div>
+        )}
+        {overviewGraphs.includes('profit') && (
+          <div className="card">
+            <h3>Profit curve</h3>
+            <div className="explain">
+              Profit = (price − variable cost) × expected demand − fixed costs. The dashed lines show the <strong>optimal price</strong> for Standard (blue) and Premium (orange). The green line is <strong>your current price</strong>. If green is far from the peak, you may be leaving money on the table.
+            </div>
+            <ProfitChart />
+          </div>
+        )}
+        {overviewGraphs.includes('demand') && (
+          <div className="card">
+            <h3>Demand + Revenue</h3>
+            <div className="explain">
+              Blue = expected rentals at each price. Orange = revenue (price × rentals). Revenue often peaks <em>before</em> demand dies — that is the sweet spot.
+            </div>
+            <DemandChart />
+          </div>
+        )}
+        {overviewGraphs.includes('competitive') && (
+          <div className="card">
+            <h3>Competitive positioning</h3>
+            <div className="explain">
+              Bars = each company's prices (solid = Standard, faded = Premium). The dashed lines mark the <strong>peak-profit prices</strong>. If Nomade's bar is well <em>above</em> the peak, our price is probably too high; well <em>below</em>, we are under-pricing.
+            </div>
+            <CompetitiveChart />
+          </div>
+        )}
+        {overviewGraphs.includes('gap') && (
+          <div className="card">
+            <h3>Gap vs competitors</h3>
+            <div className="explain">
+              How much <em>above (+)</em> or <em>below (−)</em> each competitor we are. A consistent negative gap signals a penetration move; consistent positive signals premium positioning.
+            </div>
+            <GapChart />
+          </div>
+        )}
+
+        <div className="card">
+          <h3>Detailed price table</h3>
+          <table>
+            <thead><tr><th>Company</th><th>Standard (€)</th><th>Premium (€)</th><th>Premium − Standard</th></tr></thead>
+            <tbody>
+              {compData.map((c,i) => (
+                <tr key={i} style={c.isUs ? {background:'#fff7ed', fontWeight:600} : null}>
+                  <td><span style={{display:'inline-block', width:10, height:10, borderRadius:10, background:c.color, marginRight:8}}/>{c.name}</td>
+                  <td>€{c.standard}</td><td>€{c.premium}</td><td>€{c.premium - c.standard}</td>
+                </tr>
               ))}
-            </div>
-          </div>
+            </tbody>
+          </table>
+        </div>
+      </>)}
 
+      {/* ----- Tab: Psychological factors ----- */}
+      {tab==='psych' && (<>
+        <div className="card">
+          <h2>Graph picker — Psychological factors</h2>
+          <p className="note">Combine the four main effects from the technical note. Each has its own control inputs.</p>
+          <GraphPicker options={CHART_CATALOG.filter(c=>c.group==='psych')} selected={psychGraphs} setSelected={setPsychGraphs} />
+        </div>
+
+        {psychGraphs.includes('anchor') && (
           <div className="card">
-            <h2>Competitor prices — {PERIODS.find(p=>p.k===period).label}</h2>
+            <h3>Anchoring — Good-Better-Best sandwich</h3>
+            <div className="explain orange">
+              <strong>The idea:</strong> offer three tiers. The <em>premium</em> acts as an anchor (makes the middle look affordable); the <em>basic</em> makes the middle look worth the upgrade. Most customers pick the middle option — <strong>design the middle to be your target price</strong>.
+            </div>
             <div className="grid-3">
-              {COMP_META.map(c => (
-                <div key={c.k} className="box-soft" style={{borderColor:c.color}}>
-                  <h3 style={{color:c.color}}>{c.name}</h3>
-                  <label>Standard (€)</label>
-                  <input type="number" value={competitors[period][c.k].standard} onChange={e=>updateCompetitor(c.k,'standard',e.target.value)}/>
-                  <label style={{marginTop:8}}>Premium (€)</label>
-                  <input type="number" value={competitors[period][c.k].premium} onChange={e=>updateCompetitor(c.k,'premium',e.target.value)}/>
-                </div>
-              ))}
+              <div><label>Basic (€)</label><input type="number" value={anchorTier.basic} onChange={e=>setAnchorTier({...anchorTier, basic:+e.target.value})}/></div>
+              <div><label>Middle — target (€)</label><input type="number" value={anchorTier.mid} onChange={e=>setAnchorTier({...anchorTier, mid:+e.target.value})}/></div>
+              <div><label>Premium anchor (€)</label><input type="number" value={anchorTier.premium} onChange={e=>setAnchorTier({...anchorTier, premium:+e.target.value})}/></div>
             </div>
+            <div style={{marginTop:12}}><AnchorChart /></div>
           </div>
+        )}
 
+        {psychGraphs.includes('charm') && (
           <div className="card">
-            <h2>Analyst note</h2>
-            <p className="note">Free text (reasoning, assumptions, stakeholder etc.) — it travels in the download.</p>
-            <textarea rows="4" style={{width:'100%', padding:10, border:'1px solid var(--c-border)', borderRadius:8, fontFamily:'inherit'}}
-              value={positionNote} onChange={e=>setPositionNote(e.target.value)}
-              placeholder="e.g. We chose to sit €5 under People Camper to open the weekend segment..."/>
+            <h3>Charm pricing — digit-9 effect</h3>
+            <div className="explain orange">
+              <strong>The idea:</strong> €79 feels much closer to €70 than to €80 because the left-most digit is processed first. The simulator applies a <strong>+7% perception uplift</strong> when the left digit drops. Try €80 vs €79, or €100 vs €99.
+            </div>
+            <div className="grid-2">
+              <div><label>Round price (€)</label><input type="number" value={charmTest.round} onChange={e=>setCharmTest({...charmTest, round:+e.target.value})}/></div>
+              <div><label>Charm price (€)</label><input type="number" value={charmTest.charm} onChange={e=>setCharmTest({...charmTest, charm:+e.target.value})}/></div>
+            </div>
+            <div style={{marginTop:12}}><CharmChart /></div>
           </div>
-        </>
-      )}
+        )}
 
-      {/* Tab — Download */}
+        {psychGraphs.includes('prospect') && (
+          <div className="card">
+            <h3>Prospect Theory — losses weigh more than gains</h3>
+            <div className="explain orange">
+              <strong>The idea:</strong> Kahneman &amp; Tversky's value function — people hate losing more than they like winning. A €10 price hike hurts roughly 2.25× as much as a €10 discount pleases. Useful to justify <em>framing surcharges as removed discounts</em>.
+            </div>
+            <ProspectChart />
+          </div>
+        )}
+
+        {psychGraphs.includes('reference') && (
+          <div className="card">
+            <h3>Reference price</h3>
+            <div className="explain orange">
+              <strong>The idea:</strong> customers compare our price against a mental benchmark (cheapest competitor, what they paid last year, etc.). Set the reference and see how many survey respondents fall <em>below</em>, <em>at</em>, or <em>above</em> it.
+            </div>
+            <div style={{maxWidth:240}}>
+              <label>Reference price (€)</label>
+              <input type="number" value={refPrice} onChange={e=>setRefPrice(+e.target.value)} />
+            </div>
+            <div style={{marginTop:12}}><ReferenceChart /></div>
+          </div>
+        )}
+      </>)}
+
+      {/* ----- Tab: Position & prices ----- */}
+      {tab==='position' && (<>
+        <div className="card">
+          <h2>Our position — Nomade Vans</h2>
+          <p className="note">These are the prices <strong>you</strong> want to propose. They travel in the Excel export so you can share or compare different scenarios.</p>
+          <div className="grid-3">
+            {PERIODS.map(p => (
+              <div key={p.k} className="box-soft">
+                <h3>{p.label}</h3>
+                <label>Standard (€)</label>
+                <input type="number" value={ourPrices[p.k].standard} onChange={e=>setOurPrices(prev=>({...prev,[p.k]:{...prev[p.k],standard:+e.target.value}}))}/>
+                <label style={{marginTop:8}}>Premium (€)</label>
+                <input type="number" value={ourPrices[p.k].premium}  onChange={e=>setOurPrices(prev=>({...prev,[p.k]:{...prev[p.k],premium:+e.target.value}}))}/>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div className="card">
+          <h2>Competitor prices — {periodLabel}</h2>
+          <p className="note">Update these if you have fresher intelligence. Everything else (gap, optimal price, etc.) recomputes live.</p>
+          <div className="grid-3">
+            {COMP_META.map(c => (
+              <div key={c.k} className="box-soft" style={{borderColor:c.color}}>
+                <h3 style={{color:c.color}}>{c.name}</h3>
+                <label>Standard (€)</label>
+                <input type="number" value={competitors[period][c.k].standard} onChange={e=>updateCompetitor(c.k,'standard',e.target.value)}/>
+                <label style={{marginTop:8}}>Premium (€)</label>
+                <input type="number" value={competitors[period][c.k].premium}  onChange={e=>updateCompetitor(c.k,'premium',e.target.value)}/>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div className="card">
+          <h2>Analyst note</h2>
+          <p className="note">Free text — reasoning, assumptions, stakeholder alignment, etc. It ships inside the Excel.</p>
+          <textarea rows="4" value={positionNote} onChange={e=>setPositionNote(e.target.value)}
+            placeholder="e.g. We chose to sit €5 under People Camper to open the weekend segment."/>
+        </div>
+      </>)}
+
+      {/* ----- Tab: Download Excel ----- */}
       {tab==='download' && (
         <div className="card">
-          <h2>Download questionnaire &amp; position</h2>
+          <h2>Download — Questions, Answers, Position &amp; Charts in one Excel</h2>
           <p className="note">
-            Exports the questions asked in the survey, the aggregated answers by price point, and the full position you set
-            in the simulator (prices, competitor assumptions, peak profit points, psychological parameters and analyst note).
+            Produces a single <code>.xlsx</code> with <strong>7 sheets</strong>. Opens natively in Excel, Numbers, Google Sheets and LibreOffice.
           </p>
-
           <div className="grid-2">
             <div className="box-soft">
-              <h3>What is included</h3>
-              <ul>
-                <li>13 survey questions (gender, demographics, 6 WTP questions)</li>
-                <li>Aggregated WTP distribution for day / weekend / week, standard &amp; premium</li>
-                <li>Your position: Nomade prices + competitor prices, for all periods</li>
-                <li>Peak-profit prices, gap vs competitor average, WTP acceptance rate</li>
-                <li>Psychological parameters (anchoring tiers, charm test, reference price)</li>
-                <li>Analyst free-text note</li>
+              <h3>What is inside the file</h3>
+              <ul style={{margin:'4px 0 0 18px', padding:0}}>
+                <li><strong>Guide</strong> — short explanation of the file</li>
+                <li><strong>Questions</strong> — the 13 survey questions (text, type, options)</li>
+                <li><strong>Answers — Day / Weekend / Week</strong> — aggregated WTP tables (price, responses, %, cum. acceptance)</li>
+                <li><strong>Position</strong> — your prices, competitors, KPIs, psychological parameters and free-text note</li>
+                <li><strong>Charts</strong> — all 9 simulator charts as embedded images</li>
               </ul>
             </div>
             <div className="box-soft">
-              <h3>Formats</h3>
-              <p className="note">JSON keeps the full structure; CSV is flat and opens in Excel.</p>
-              <div className="row">
-                <button className="btn primary" onClick={downloadJSON}>Download JSON</button>
-                <button className="btn orange"  onClick={downloadCSV}>Download CSV</button>
-              </div>
-              <p className="hint">Filename includes the active period &amp; version.</p>
+              <h3>Before you download</h3>
+              <p className="note">Charts in the file reflect the <strong>current state</strong> of the simulator — active period, version, competitor prices, psychological inputs. Pick the view you want first, then click download.</p>
+              <button className="btn primary" onClick={buildExcel} disabled={downloading}>
+                {downloading ? 'Generating…' : 'Download Excel (.xlsx)'}
+              </button>
+              {downloadStatus && <div className={`status ${downloadStatus.kind==='err'?'err':downloadStatus.kind==='ok'?'ok':''}`}>{downloadStatus.text}</div>}
             </div>
-          </div>
-
-          <div style={{marginTop:16}}>
-            <h3>Preview — position snapshot</h3>
-            <pre style={{background:'#0f172a', color:'#e2e8f0', padding:14, borderRadius:10, overflow:'auto', fontSize:'.82rem'}}>
-{JSON.stringify(position, null, 2)}
-            </pre>
           </div>
         </div>
       )}
 
-      <div className="footer">© César Moreno Pascual PhD — Nomade Vans pricing simulator • Built with React + Recharts</div>
+      {/* Offscreen charts — the source for the PNG captures that go into the Excel */}
+      <div className="offscreen" aria-hidden="true">
+        {CHART_CATALOG.map(c => (
+          <div key={c.k} id={'cap-'+c.k} style={{width:860, height:380, background:'#fff', padding:8}}>
+            <c.C h={360} w={844} />
+          </div>
+        ))}
+      </div>
+
+      <div className="footer">© César Moreno Pascual PhD — Nomade Vans pricing simulator • Built with React + Recharts + ExcelJS</div>
     </div>
   );
 }
