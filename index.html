@@ -335,6 +335,25 @@ function App() {
   const pctAcceptStd  = pctAccepting(SURVEY[period].standard, ourPrices[period].standard);
   const pctAcceptPrem = pctAccepting(SURVEY[period].premium,  ourPrices[period].premium);
 
+  /* Live metrics at the current "Our price" for the active version */
+  const live = useMemo(() => {
+    const ourP = ourPrices[period][version];
+    const D0 = COSTS[version].D * DEMAND_MULT[period];
+    const d = interpolateDemand(SURVEY[period][version], ourP, D0);
+    const rev = ourP * d;
+    const vc  = COSTS[version].VC * d;
+    const prof = rev - vc - COSTS[version].FC;
+    const peak = version === 'standard' ? peakStd : peakPrem;
+    return {
+      price: ourP,
+      demand: Math.round(d),
+      revenue: Math.round(rev),
+      profit: Math.round(prof),
+      lostVsPeak: Math.round(peak.profit - prof),
+      peakPrice: peak.price
+    };
+  }, [ourPrices, period, version, peakStd, peakPrem]);
+
   /* ---------- Chart components (accept w,h so the offscreen copy can render fixed-size) ---------- */
   const wtpData = useMemo(() => {
     const cum = wtpCumulative(curSurvey);
@@ -357,21 +376,54 @@ function App() {
     </ResponsiveContainer>
   );
 
-  const ProfitChart = ({h=340, w="100%"}) => (
-    <ResponsiveContainer width={w} height={h}>
-      <LineChart data={curCurve}>
-        <CartesianGrid strokeDasharray="3 3" />
-        <XAxis dataKey="price" />
-        <YAxis />
-        <Tooltip formatter={v => `€${Number(v).toLocaleString()}`} />
-        <Legend />
-        <ReferenceLine x={peakStd.price}  stroke="#3b82f6" strokeDasharray="5 5" label={{ value:`Std opt €${peakStd.price}`,  position:'top', fill:'#3b82f6' }}/>
-        <ReferenceLine x={peakPrem.price} stroke="#f97316" strokeDasharray="5 5" label={{ value:`Prem opt €${peakPrem.price}`, position:'top', fill:'#f97316' }}/>
-        <ReferenceLine x={ourPrices[period][version]} stroke="#059669" strokeWidth={2} label={{ value:`Our €${ourPrices[period][version]}`, position:'bottom', fill:'#059669' }}/>
-        <Line type="monotone" dataKey="profit" stroke={version==='standard' ? '#3b82f6' : '#f97316'} strokeWidth={3} dot={false} name={version==='standard'?'Standard profit':'Premium profit'} />
-      </LineChart>
-    </ResponsiveContainer>
-  );
+  const ProfitChart = ({h=380, w="100%", interactive=false}) => {
+    const [dragging, setDragging] = useState(false);
+    useEffect(() => {
+      if (!interactive) return;
+      const up = () => setDragging(false);
+      window.addEventListener('mouseup', up);
+      return () => window.removeEventListener('mouseup', up);
+    }, [interactive]);
+    const snap = (val) => {
+      /* snap to nearest curve x to avoid jitter */
+      let best = curCurve[0].price, dmin = Infinity;
+      for (const p of curCurve) { const d = Math.abs(p.price - val); if (d < dmin) { dmin = d; best = p.price; } }
+      return best;
+    };
+    const move = (e, forceStart=false) => {
+      if (!interactive) return;
+      if (e && e.activeLabel != null) {
+        const v = snap(e.activeLabel);
+        if (forceStart || dragging) {
+          setOurPrices(prev => ({ ...prev, [period]: { ...prev[period], [version]: v } }));
+        }
+      }
+    };
+    return (
+      <ResponsiveContainer width={w} height={h}>
+        <LineChart data={curCurve}
+          onMouseDown={(e) => { if (interactive && e?.activeLabel != null) { setDragging(true); move(e, true); } }}
+          onMouseMove={(e) => move(e)}
+          style={interactive ? { cursor: dragging ? 'grabbing' : 'crosshair' } : undefined}
+        >
+          <CartesianGrid strokeDasharray="3 3" />
+          <XAxis dataKey="price" type="number" domain={['dataMin','dataMax']} label={{ value:'Price (€)', position:'insideBottom', offset:-4 }} />
+          <YAxis />
+          <Tooltip formatter={v => `€${Number(v).toLocaleString()}`} />
+          <Legend />
+          <ReferenceLine x={peakStd.price}  stroke="#3b82f6" strokeDasharray="5 5" label={{ value:`Std opt €${peakStd.price}`,  position:'top', fill:'#3b82f6' }}/>
+          <ReferenceLine x={peakPrem.price} stroke="#f97316" strokeDasharray="5 5" label={{ value:`Prem opt €${peakPrem.price}`, position:'top', fill:'#f97316' }}/>
+          {COMP_META.map(c => (
+            <ReferenceLine key={c.k} x={competitors[period][c.k][version]} stroke={c.color} strokeDasharray="3 3"
+              label={{ value: c.name, fill: c.color, position: 'insideTop', fontSize: 11 }} />
+          ))}
+          <ReferenceLine x={ourPrices[period][version]} stroke="#059669" strokeWidth={3}
+            label={{ value: interactive ? `◉ Our €${ourPrices[period][version]} — drag me` : `Our €${ourPrices[period][version]}`, position:'bottom', fill:'#059669', fontSize: 12, fontWeight: 600 }}/>
+          <Line type="monotone" dataKey="profit" stroke={version==='standard' ? '#3b82f6' : '#f97316'} strokeWidth={3} dot={false} name={version==='standard'?'Standard profit':'Premium profit'} isAnimationActive={false} />
+        </LineChart>
+      </ResponsiveContainer>
+    );
+  };
 
   const DemandChart = ({h=300, w="100%"}) => (
     <ResponsiveContainer width={w} height={h}>
@@ -764,11 +816,14 @@ function App() {
           <h2>How to use the simulator — in 5 steps</h2>
           <ol className="step-list">
             <li><strong>Pick a rental period</strong> (Daily / Weekend / Week) and a <strong>version</strong> (Standard or Premium) at the top. Everything updates automatically.</li>
-            <li>Go to <strong>Competition-based</strong>. Tick the graphs you want to see. Compare Nomade's price with the peak-profit price and with the three competitors.</li>
+            <li>Go to <strong>Competition-based</strong>. Tick the graphs you want to see and <strong>drag the green line on the Profit curve</strong> — KPIs for profit, demand, revenue and lost-vs-peak update live. Quick-jump buttons let you snap to the peak or to each competitor's price.</li>
             <li>Go to <strong>Psychological factors</strong>. Try a three-tier menu (anchoring), test charm pricing, explore Prospect Theory and set a reference price.</li>
-            <li>Open <strong>Position &amp; prices</strong>. Change your own prices, change the competitors', add a free-text note.</li>
+            <li>Open <strong>Position &amp; prices</strong>. Change your own prices (via chart or numeric inputs), change the competitors', add a free-text note.</li>
             <li>Open <strong>Download Excel</strong>. One click produces a <code>.xlsx</code> with the questions, the answers, your position and all the charts as images.</li>
           </ol>
+          <div className="explain green" style={{marginTop:12}}>
+            <strong>New — interactive chart.</strong> On the <em>Profit curve</em> the green line is your price. <strong>Click on the chart or drag horizontally</strong> to position it. The three coloured dashed lines are Further VAN, People Camper and Ocean Vans — the curve height at each tells you what profit you would make <em>if you priced like them</em>. If moving <em>toward</em> a competitor raises the curve, it pays to move up; if it lowers it, stay put.
+          </div>
         </div>
 
         <div className="card">
@@ -819,11 +874,32 @@ function App() {
         )}
         {overviewGraphs.includes('profit') && (
           <div className="card">
-            <h3>Profit curve</h3>
+            <h3>Profit curve — drag the green line to set our price</h3>
             <div className="explain">
-              Profit = (price − variable cost) × expected demand − fixed costs. The dashed lines show the <strong>optimal price</strong> for Standard (blue) and Premium (orange). The green line is <strong>your current price</strong>. If green is far from the peak, you may be leaving money on the table.
+              <strong>Interactive:</strong> click anywhere on the chart (or click-and-drag) to move the green "Our price" line. Every KPI below updates live. The coloured dashed lines show where each <em>competitor</em> sits — read the curve at each competitor's x to see how much profit we would make at their price. The blue/orange dashed lines are the Standard / Premium peak.
+              <br/><em>Quick read:</em> if we move <em>up</em> toward a competitor and profit rises, we are under-pricing; if it falls, we would be over-pricing.
             </div>
-            <ProfitChart />
+            <ProfitChart interactive={true} />
+
+            <div className="grid-4" style={{marginTop:14}}>
+              <KPI label={`Profit at €${live.price}`} value={`€${live.profit.toLocaleString()}`} color={live.profit>=0?'green':'red'} />
+              <KPI label="Expected demand" value={`${live.demand.toLocaleString()} rentals`} color="blue" />
+              <KPI label="Revenue" value={`€${live.revenue.toLocaleString()}`} color="orange" />
+              <KPI label={`Lost vs peak (€${live.peakPrice})`} value={live.lostVsPeak===0 ? '€0 (optimum!)' : `−€${live.lostVsPeak.toLocaleString()}`} color={live.lostVsPeak===0?'green':'red'} />
+            </div>
+            <p className="hint" style={{marginTop:8}}>
+              The green line is <strong>draggable</strong>. Compare the profit at each competitor's dashed line: if Further VAN is at €{competitors[period].furtherVAN[version]} and our curve there is <em>higher</em> than at €{live.price}, we gain by moving toward them.
+            </p>
+
+            <div className="row" style={{marginTop:10}}>
+              <button className="btn primary" onClick={() => setOurPrices(prev => ({...prev, [period]: { ...prev[period], [version]: (version==='standard'?peakStd:peakPrem).price }}))}>Snap to peak</button>
+              {COMP_META.map(c => (
+                <button key={c.k} className="btn" style={{borderColor:c.color, color:c.color}}
+                  onClick={() => setOurPrices(prev => ({...prev, [period]: { ...prev[period], [version]: competitors[period][c.k][version] }}))}>
+                  Match {c.name} (€{competitors[period][c.k][version]})
+                </button>
+              ))}
+            </div>
           </div>
         )}
         {overviewGraphs.includes('demand') && (
@@ -935,7 +1011,21 @@ function App() {
       {/* ----- Tab: Position & prices ----- */}
       {tab==='position' && (<>
         <div className="card">
-          <h2>Our position — Nomade Vans</h2>
+          <h2>Position the price on the chart — {periodLabel} • {version}</h2>
+          <div className="explain green">
+            <strong>Drag the green line.</strong> Every number input below syncs automatically. Dashed lines = the three competitors at their current price; blue/orange dashed = peak profit for Standard / Premium.
+          </div>
+          <ProfitChart interactive={true} h={360} />
+          <div className="grid-4" style={{marginTop:14}}>
+            <KPI label={`Profit at €${live.price}`} value={`€${live.profit.toLocaleString()}`} color={live.profit>=0?'green':'red'} />
+            <KPI label="Expected demand" value={`${live.demand.toLocaleString()} rentals`} color="blue" />
+            <KPI label="Revenue" value={`€${live.revenue.toLocaleString()}`} color="orange" />
+            <KPI label={`Lost vs peak (€${live.peakPrice})`} value={live.lostVsPeak===0 ? '€0 (optimum!)' : `−€${live.lostVsPeak.toLocaleString()}`} color={live.lostVsPeak===0?'green':'red'} />
+          </div>
+        </div>
+
+        <div className="card">
+          <h2>Numeric inputs — all periods</h2>
           <p className="note">These are the prices <strong>you</strong> want to propose. They travel in the Excel export so you can share or compare different scenarios.</p>
           <div className="grid-3">
             {PERIODS.map(p => (

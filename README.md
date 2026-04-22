@@ -29,7 +29,16 @@ Every module has a chip-style picker — tick the graphs you want on the board. 
 ### 4. "How to use" walk-through
 Built-in tab with a 5-step guide, per-tab explanations, per-chart "what this shows" callouts, and a click-to-expand glossary (WTP, peak price, anchoring, charm pricing, Prospect Theory, reference price, …).
 
-### 5. One-click Excel export
+### 5. Interactive Profit curve
+- **Drag the green "Our price" line** left/right — KPIs for profit, demand, revenue and "lost vs peak" update live.
+- Competitors (Further VAN, People Camper, Ocean Vans) appear as **dashed coloured lines on the Profit curve**, so you can read at each competitor's x what our profit would be at their price — and immediately see if moving up/down makes sense.
+- Quick-jump buttons: *Snap to peak*, *Match Further VAN*, *Match People Camper*, *Match Ocean Vans*.
+- The same chart lives on the Position & prices tab, so dragging it syncs the numeric inputs.
+
+### 6. Student workbook (Word)
+`Nomade_Vans_Case_Study_Simulator_Edition.docx` — a companion Word document built from `build_case_docx.py`. It contains the case background, cost structure, competitor prices, the 13 survey questions for the student to answer, a 5-step simulator walkthrough and 8 formal deliverable questions with answer boxes.
+
+### 7. One-click Excel export
 A single `.xlsx` download with **7 sheets**:
 - **Guide** — short explanation of the file
 - **Questions** — the 13 survey questions (text, type, options)
