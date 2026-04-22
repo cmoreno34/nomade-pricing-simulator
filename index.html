@@ -308,7 +308,9 @@ function App() {
   const [charmTest, setCharmTest] = useState({ round: 80, charm: 79 });
   const [anchorTier, setAnchorTier] = useState({ basic: 60, mid: 80, premium: 100 });
   const [refPrice, setRefPrice] = useState(85);
+  const [prospectFromTo, setProspectFromTo] = useState({ from: 80, to: 90 });
   const [positionNote, setPositionNote] = useState('');
+  const [psychSynced, setPsychSynced] = useState(0); /* bump forces reset from position */
 
   const [downloading, setDownloading] = useState(false);
   const [downloadStatus, setDownloadStatus] = useState(null);
@@ -334,6 +336,20 @@ function App() {
   const gapPrem = ourPrices[period].premium  - avgCompPrem;
   const pctAcceptStd  = pctAccepting(SURVEY[period].standard, ourPrices[period].standard);
   const pctAcceptPrem = pctAccepting(SURVEY[period].premium,  ourPrices[period].premium);
+
+  /* Sync psychological-factor defaults from the current Nomade position
+     (only when period/version changes or the user explicitly clicks "Reset") */
+  useEffect(() => {
+    const ourStd  = ourPrices[period].standard;
+    const ourPrem = ourPrices[period].premium;
+    const compStdMin = Math.min(...COMP_META.map(c => competitors[period][c.k].standard));
+    setAnchorTier({ basic: compStdMin, mid: ourStd, premium: ourPrem });
+    const rounded = ourStd;
+    setCharmTest({ round: rounded, charm: rounded > 10 ? rounded - 1 : rounded });
+    setRefPrice(compStdMin);
+    setProspectFromTo({ from: ourStd, to: Math.round(ourStd * 1.1) });
+    /* eslint-disable-next-line react-hooks/exhaustive-deps */
+  }, [period, version, psychSynced]);
 
   /* Live metrics at the current "Our price" for the active version */
   const live = useMemo(() => {
@@ -518,16 +534,24 @@ function App() {
   };
 
   const ProspectChart = ({h=280, w="100%"}) => {
+    const delta = prospectFromTo.to - prospectFromTo.from; /* €, from customer's viewpoint: +ve = discount, -ve = hike */
+    const customerChange = -delta; /* customer's "gain" (discount) or "loss" (hike) vs reference */
+    const xMax = Math.max(50, Math.ceil(Math.abs(customerChange) * 1.2));
     const pts = [];
-    for (let x = -50; x <= 50; x += 2) pts.push({ gainLoss: x, value: Math.round(prospectValue(x)*100)/100 });
+    for (let x = -xMax; x <= xMax; x += Math.max(1, Math.round(xMax/30))) pts.push({ gainLoss: x, value: Math.round(prospectValue(x)*100)/100 });
+    const vChange = prospectValue(customerChange);
+    const vEqualGain = customerChange < 0 ? Math.abs(vChange) : null; /* how big a gain we'd need to offset */
     return (
       <ResponsiveContainer width={w} height={h}>
         <LineChart data={pts}>
           <CartesianGrid strokeDasharray="3 3" />
-          <XAxis dataKey="gainLoss" /><YAxis />
+          <XAxis dataKey="gainLoss" type="number" domain={[-xMax, xMax]} label={{ value:'Customer gain (+) or loss (−) vs reference (€)', position:'insideBottom', offset:-4, fontSize:11 }} />
+          <YAxis label={{ value:'Perceived value', angle:-90, position:'insideLeft', fontSize:11 }} />
           <ReferenceLine x={0} stroke="#0f172a" /><ReferenceLine y={0} stroke="#0f172a" />
           <Tooltip />
-          <Line type="monotone" dataKey="value" stroke="#7c3aed" strokeWidth={3} dot={false} name="Perceived value" />
+          <Line type="monotone" dataKey="value" stroke="#7c3aed" strokeWidth={3} dot={false} name="v(x)" isAnimationActive={false} />
+          <ReferenceLine x={customerChange} stroke={delta>0 ? '#059669' : '#dc2626'} strokeWidth={2} strokeDasharray="5 5"
+            label={{ value: `Δ €${delta>=0?'+':''}${delta} → felt ${Math.round(vChange*10)/10}`, fill: delta>0 ? '#059669' : '#dc2626', position:'top', fontSize:11 }} />
         </LineChart>
       </ResponsiveContainer>
     );
@@ -949,8 +973,26 @@ function App() {
       {/* ----- Tab: Psychological factors ----- */}
       {tab==='psych' && (<>
         <div className="card">
+          <h2>Workflow — how this tab plugs into your pricing decision</h2>
+          <div className="explain">
+            <strong>1.</strong> Every control below is <strong>pre-loaded from your current position</strong> on the Competition-based / Position tabs — so the sandwich, the charm price, the reference and the "current" side of Prospect Theory all start from the Nomade prices you already set.<br/>
+            <strong>2.</strong> Experiment freely (drag, type, try charm €79, change the anchor…).<br/>
+            <strong>3.</strong> When you are happy, click <em>"Apply to Standard"</em> or <em>"Apply to Premium"</em> inside each card — this pushes the tested number into <strong>Position &amp; prices</strong> for the active period, so your download reflects it.
+          </div>
+          <div className="row" style={{marginTop:10}}>
+            <button className="btn" onClick={()=>setPsychSynced(v=>v+1)}>Reset all psych controls from current position</button>
+          </div>
+          <div className="grid-4" style={{marginTop:10}}>
+            <KPI label={`Our Std (${period})`} value={`€${ourPrices[period].standard}`} color="blue" />
+            <KPI label={`Our Prem (${period})`} value={`€${ourPrices[period].premium}`} color="orange" />
+            <KPI label="Cheapest competitor (Std)" value={`€${Math.min(...COMP_META.map(c=>competitors[period][c.k].standard))}`} />
+            <KPI label="Most expensive competitor (Std)" value={`€${Math.max(...COMP_META.map(c=>competitors[period][c.k].standard))}`} />
+          </div>
+        </div>
+
+        <div className="card">
           <h2>Graph picker — Psychological factors</h2>
-          <p className="note">Combine the four main effects from the technical note. Each has its own control inputs.</p>
+          <p className="note">Tick the effects you want to experiment with.</p>
           <GraphPicker options={CHART_CATALOG.filter(c=>c.group==='psych')} selected={psychGraphs} setSelected={setPsychGraphs} />
         </div>
 
@@ -958,7 +1000,8 @@ function App() {
           <div className="card">
             <h3>Anchoring — Good-Better-Best sandwich</h3>
             <div className="explain orange">
-              <strong>The idea:</strong> offer three tiers. The <em>premium</em> acts as an anchor (makes the middle look affordable); the <em>basic</em> makes the middle look worth the upgrade. Most customers pick the middle option — <strong>design the middle to be your target price</strong>.
+              <strong>Idea:</strong> offer three tiers. The <em>premium</em> acts as an anchor (makes the middle look affordable); the <em>basic</em> makes the middle look worth the upgrade. Most customers pick the middle option — <strong>design the middle to be your target price</strong>.
+              <br/><strong>Defaults:</strong> Basic = cheapest competitor, Middle = our Standard, Premium = our Premium.
             </div>
             <div className="grid-3">
               <div><label>Basic (€)</label><input type="number" value={anchorTier.basic} onChange={e=>setAnchorTier({...anchorTier, basic:+e.target.value})}/></div>
@@ -966,6 +1009,10 @@ function App() {
               <div><label>Premium anchor (€)</label><input type="number" value={anchorTier.premium} onChange={e=>setAnchorTier({...anchorTier, premium:+e.target.value})}/></div>
             </div>
             <div style={{marginTop:12}}><AnchorChart /></div>
+            <div className="row" style={{marginTop:10}}>
+              <button className="btn primary" onClick={()=>setOurPrices(prev=>({...prev,[period]:{...prev[period], standard: anchorTier.mid}}))}>Apply middle €{anchorTier.mid} → Our Standard</button>
+              <button className="btn orange"  onClick={()=>setOurPrices(prev=>({...prev,[period]:{...prev[period], premium: anchorTier.premium}}))}>Apply premium €{anchorTier.premium} → Our Premium</button>
+            </div>
           </div>
         )}
 
@@ -973,13 +1020,18 @@ function App() {
           <div className="card">
             <h3>Charm pricing — digit-9 effect</h3>
             <div className="explain orange">
-              <strong>The idea:</strong> €79 feels much closer to €70 than to €80 because the left-most digit is processed first. The simulator applies a <strong>+7% perception uplift</strong> when the left digit drops. Try €80 vs €79, or €100 vs €99.
+              <strong>Idea:</strong> €79 feels closer to €70 than to €80 because the left-most digit is processed first. The simulator applies a <strong>+7% perception uplift</strong> when the left digit drops.
+              <br/><strong>Defaults:</strong> round price = our current Standard; charm price = round − 1.
             </div>
             <div className="grid-2">
               <div><label>Round price (€)</label><input type="number" value={charmTest.round} onChange={e=>setCharmTest({...charmTest, round:+e.target.value})}/></div>
               <div><label>Charm price (€)</label><input type="number" value={charmTest.charm} onChange={e=>setCharmTest({...charmTest, charm:+e.target.value})}/></div>
             </div>
             <div style={{marginTop:12}}><CharmChart /></div>
+            <div className="row" style={{marginTop:10}}>
+              <button className="btn primary" onClick={()=>setOurPrices(prev=>({...prev,[period]:{...prev[period], standard: charmTest.charm}}))}>Apply charm €{charmTest.charm} → Our Standard</button>
+              <button className="btn orange"  onClick={()=>setOurPrices(prev=>({...prev,[period]:{...prev[period], premium: charmTest.charm}}))}>Apply charm €{charmTest.charm} → Our Premium</button>
+            </div>
           </div>
         )}
 
@@ -987,9 +1039,31 @@ function App() {
           <div className="card">
             <h3>Prospect Theory — losses weigh more than gains</h3>
             <div className="explain orange">
-              <strong>The idea:</strong> Kahneman &amp; Tversky's value function — people hate losing more than they like winning. A €10 price hike hurts roughly 2.25× as much as a €10 discount pleases. Useful to justify <em>framing surcharges as removed discounts</em>.
+              <strong>Idea:</strong> a €X price hike (loss for the customer) hurts ~2.25× as much as a €X discount (gain) pleases. Use this to decide <em>whether</em> to raise a price, and <em>how</em> to frame it.
+              <br/><strong>How to use:</strong> "<em>From</em>" = reference price the customer has in mind (usually your current price). "<em>To</em>" = what you want to charge. The dashed line shows where the change sits on the value function. Positive → gain (green). Negative → loss (red).
             </div>
-            <ProspectChart />
+            <div className="grid-2">
+              <div><label>From — current / reference price (€)</label><input type="number" value={prospectFromTo.from} onChange={e=>setProspectFromTo({...prospectFromTo, from:+e.target.value})}/></div>
+              <div><label>To — proposed new price (€)</label><input type="number" value={prospectFromTo.to} onChange={e=>setProspectFromTo({...prospectFromTo, to:+e.target.value})}/></div>
+            </div>
+            <div style={{marginTop:12}}><ProspectChart /></div>
+            {(() => {
+              const d = prospectFromTo.to - prospectFromTo.from; /* +ve = price up */
+              const customerFelt = Math.round(prospectValue(-d) * 10)/10;
+              return (
+                <div className="explain" style={{borderLeftColor: d>0 ? '#dc2626' : '#059669', background: d>0 ? '#fef2f2' : '#ecfdf5'}}>
+                  {d === 0 ? (<>No change — nothing felt.</>) : d > 0 ? (
+                    <>You are <strong>raising the price by €{d}</strong>. The customer perceives this as a loss worth ≈ <strong>{Math.abs(customerFelt)}</strong> value units. To offset it you would need a gain of ≈ <strong>€{Math.round(Math.abs(d)*2.25*10)/10}</strong> — or, better, <em>reframe the hike as a removed discount</em>.</>
+                  ) : (
+                    <>You are <strong>cutting the price by €{Math.abs(d)}</strong>. The customer perceives a gain of ≈ <strong>{customerFelt}</strong> value units. Remember: gains are felt less intensely than losses of the same size.</>
+                  )}
+                </div>
+              );
+            })()}
+            <div className="row" style={{marginTop:10}}>
+              <button className="btn primary" onClick={()=>setOurPrices(prev=>({...prev,[period]:{...prev[period], standard: prospectFromTo.to}}))}>Apply €{prospectFromTo.to} → Our Standard</button>
+              <button className="btn orange"  onClick={()=>setOurPrices(prev=>({...prev,[period]:{...prev[period], premium: prospectFromTo.to}}))}>Apply €{prospectFromTo.to} → Our Premium</button>
+            </div>
           </div>
         )}
 
@@ -997,13 +1071,28 @@ function App() {
           <div className="card">
             <h3>Reference price</h3>
             <div className="explain orange">
-              <strong>The idea:</strong> customers compare our price against a mental benchmark (cheapest competitor, what they paid last year, etc.). Set the reference and see how many survey respondents fall <em>below</em>, <em>at</em>, or <em>above</em> it.
+              <strong>Idea:</strong> customers compare our price against a mental benchmark (cheapest competitor, last year's rate, etc.). Set the reference and see how many survey respondents fall <em>below</em>, <em>at</em>, or <em>above</em> it.
+              <br/><strong>Default:</strong> cheapest competitor at the active period.
             </div>
-            <div style={{maxWidth:240}}>
-              <label>Reference price (€)</label>
-              <input type="number" value={refPrice} onChange={e=>setRefPrice(+e.target.value)} />
+            <div className="grid-2">
+              <div style={{maxWidth:260}}>
+                <label>Reference price (€)</label>
+                <input type="number" value={refPrice} onChange={e=>setRefPrice(+e.target.value)} />
+              </div>
+              <div style={{alignSelf:'end'}}>
+                {COMP_META.map(c => (
+                  <button key={c.k} className="btn" style={{borderColor:c.color, color:c.color, marginRight:6}}
+                    onClick={()=>setRefPrice(competitors[period][c.k][version])}>
+                    Use {c.name} €{competitors[period][c.k][version]}
+                  </button>
+                ))}
+              </div>
             </div>
             <div style={{marginTop:12}}><ReferenceChart /></div>
+            <div className="row" style={{marginTop:10}}>
+              <button className="btn primary" onClick={()=>setOurPrices(prev=>({...prev,[period]:{...prev[period], standard: refPrice}}))}>Match reference €{refPrice} → Our Standard</button>
+              <button className="btn orange"  onClick={()=>setOurPrices(prev=>({...prev,[period]:{...prev[period], premium: refPrice}}))}>Match reference €{refPrice} → Our Premium</button>
+            </div>
           </div>
         )}
       </>)}
