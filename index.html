@@ -312,6 +312,26 @@ function App() {
   const [positionNote, setPositionNote] = useState('');
   const [psychSynced, setPsychSynced] = useState(0); /* bump forces reset from position */
 
+  /* Case deliverables — 3 formal questions from Nomade v2.0 */
+  const [caseAnswers, setCaseAnswers] = useState({ q1: '', q2: '', q3: '' });
+  const CASE_QUESTIONS = [
+    { id: 'Q1',
+      title: 'Assumptions — competitors\' cost structure & brand-value differentiation',
+      prompt: 'Give assumptions of competitors\' cost structures and brand-value differentiation compared to NOMADE. Consider that NOMADE is new, and the others are well-established.',
+      hint: 'Use Competition-based → Profit curve. Read profit at each competitor\'s dashed line. Contrast with assumed fixed-cost structure and brand positioning (design, sustainability, customisation).'
+    },
+    { id: 'Q2',
+      title: 'Competitive strategy',
+      prompt: 'Suggest a competitive strategy for Nomade, indicating whether Nomade can improve its market position with a strategic view. Also consider possible psychological factors.',
+      hint: 'Drag the green line and use Match-competitor / Snap-to-peak buttons. Then use Psychological factors (Anchoring, Charm, Prospect Theory, Reference price) and the Apply-to-position buttons to push tested numbers into your final price.'
+    },
+    { id: 'Q3',
+      title: 'Pricing implementation & promotional actions',
+      prompt: 'Suggest a pricing implementation strategy with the final list prices and elaborate on possible promotional actions.',
+      hint: 'Fix prices on the Position & prices tab for every period × version. Propose 2–3 promotions (early-bird, loyalty, charm endings, good-better-best bundle) — target segment, price lever, expected pain/gain (Prospect Theory).'
+    }
+  ];
+
   const [downloading, setDownloading] = useState(false);
   const [downloadStatus, setDownloadStatus] = useState(null);
 
@@ -642,13 +662,23 @@ function App() {
         ['Nomade Vans — Pricing Simulator', ''],
         ['Generated at', new Date().toISOString()],
         ['', ''],
+        ['Case background', ''],
+        ['Company',          'Nomade Vans — Spanish start-up designing sustainable camperised vans. Two service tiers: Standard and Premium. New line of business under evaluation: van rental.'],
+        ['Rental periods',   'Day · Weekend (2 nights) · Week (6 nights).'],
+        ['Survey',           '95 respondents — demographics, travel habits and max WTP in 6 rental scenarios.'],
+        ['Competitors',      'Further VAN experience · People Camper · Ocean Vans — daily tariffs only.'],
+        ['', ''],
+        ['⚠ Data note', ''],
+        ['Incomplete dataset', 'The three competitors publish DAILY tariffs only. The weekend and weekly prices in the simulator are ESTIMATES aggregated from the daily tariff (weekend ≈ −5 % per day, week ≈ −30 % per day). Treat them as reference scenarios, not observed data. Nomade WTP data itself is real (95 respondents).'],
+        ['', ''],
         ['How to read this file', ''],
-        ['Guide',               'This sheet — what the other sheets contain.'],
-        ['Questions',           'The 13 questions asked to the 90 survey respondents.'],
+        ['Guide',               'This sheet — case background, data note and active view.'],
+        ['Questions',           'The 13 questions asked to the 95 survey respondents (reference only, not a student task).'],
         ['Answers — Day',       'Aggregated answers to the "day" WTP questions (Standard & Premium).'],
-        ['Answers — Weekend',   'Same for the weekend rate.'],
-        ['Answers — Week',      'Same for the weekly rate.'],
+        ['Answers — Weekend',   'Same for the weekend rate (derived from the daily WTP via scaling).'],
+        ['Answers — Week',      'Same for the weekly rate (derived from the daily WTP via scaling).'],
         ['Position',            'The prices you set in the simulator and the resulting KPIs.'],
+        ['Case answers',        'Your written answers to the three formal case questions.'],
         ['Charts',              'All 9 charts from the simulator, embedded as images.'],
         ['', ''],
         ['Your active view when downloading', ''],
@@ -661,7 +691,8 @@ function App() {
       g.forEach((r,i) => {
         const row = s1.addRow(r);
         if (i === 0) row.font = { bold: true, size: 14 };
-        if (['How to read this file','Your active view when downloading'].includes(r[0])) row.font = { bold: true };
+        if (['Case background','⚠ Data note','How to read this file','Your active view when downloading'].includes(r[0])) row.font = { bold: true };
+        if (r[0] === '⚠ Data note') row.getCell(1).font = { bold: true, color: { argb: 'FF92400E' } };
       });
 
       /* Sheet 2: Questions */
@@ -741,6 +772,30 @@ function App() {
       s6.addRow(['Reference price (€)',     refPrice]);
       s6.addRow([]);
       s6.addRow(['Analyst note', positionNote || '(none)']);
+
+      /* Sheet 6b: Case answers — the three formal questions */
+      const sA = wb.addWorksheet('Case answers');
+      sA.columns = [{ width: 6 }, { width: 30 }, { width: 90 }];
+      const titleRow = sA.addRow(['', 'Nomade Vans — Case deliverables', '']);
+      titleRow.getCell(2).font = { bold: true, size: 14 };
+      sA.addRow([]);
+      for (const q of CASE_QUESTIONS) {
+        const hdr = sA.addRow([q.id, q.title, '']);
+        hdr.getCell(1).font = { bold: true, color: { argb: 'FFF97316' } };
+        hdr.getCell(2).font = { bold: true };
+        const prompt = sA.addRow(['', 'Prompt', q.prompt]);
+        prompt.getCell(2).font = { italic: true, color: { argb: 'FF64748B' } };
+        prompt.getCell(3).alignment = { wrapText: true, vertical: 'top' };
+        const hint = sA.addRow(['', 'Simulator tip', q.hint]);
+        hint.getCell(2).font = { italic: true, color: { argb: 'FF64748B' } };
+        hint.getCell(3).alignment = { wrapText: true, vertical: 'top' };
+        const answerText = caseAnswers[q.id.toLowerCase()] || '(no answer yet)';
+        const ans = sA.addRow(['', 'Your answer', answerText]);
+        ans.getCell(2).font = { bold: true };
+        ans.getCell(3).alignment = { wrapText: true, vertical: 'top' };
+        ans.height = Math.min(300, Math.max(40, Math.round(answerText.length/80)*18 + 40));
+        sA.addRow([]);
+      }
 
       /* Sheet 7: Charts */
       const s7 = wb.addWorksheet('Charts');
@@ -831,11 +886,63 @@ function App() {
         <button className={`tab ${tab==='overview'?'active':''}`} onClick={()=>setTab('overview')}>Competition-based</button>
         <button className={`tab ${tab==='psych'?'active':''}`}    onClick={()=>setTab('psych')}>Psychological factors</button>
         <button className={`tab ${tab==='position'?'active':''}`} onClick={()=>setTab('position')}>Position &amp; prices</button>
+        <button className={`tab ${tab==='answers'?'active':''}`}  onClick={()=>setTab('answers')}>Case answers</button>
         <button className={`tab ${tab==='download'?'active':''}`} onClick={()=>setTab('download')}>Download Excel</button>
       </div>
 
       {/* ----- Tab: How to use ----- */}
       {tab==='guide' && (<>
+        <div className="card">
+          <h2>The case — Nomade Vans</h2>
+          <p>
+            <strong>Nomade Vans</strong> is a Spanish start-up that designs and <em>«camperizes»</em>
+            sustainable vans. Customers customise their camper through the company website, and the firm
+            commits to a one-month delivery. Unlike most players in the category, Nomade builds a unique
+            design aligned with sustainability values and the natural environment.
+          </p>
+          <p>
+            After two seasons selling converted vans for direct ownership, the founders are now considering
+            a new line of business: <strong>renting camperized vans</strong>. The plan is to run two service
+            tiers and three rental periods.
+          </p>
+          <div className="grid-2">
+            <div className="box-soft">
+              <h3>Two service tiers</h3>
+              <ul style={{margin:'4px 0 0 18px', padding:0}}>
+                <li><strong>Standard Camper Rental</strong> — the base conversion, proven kitchen + bed package.</li>
+                <li><strong>Premium Camper Rental</strong> — hybrid model, extra bed, indoor shower, air conditioning, solar power, extra kitchenware.</li>
+              </ul>
+            </div>
+            <div className="box-soft">
+              <h3>Three rental periods</h3>
+              <ul style={{margin:'4px 0 0 18px', padding:0}}>
+                <li><strong>Day</strong> — single day rental.</li>
+                <li><strong>Weekend</strong> — 2-night stay.</li>
+                <li><strong>Week</strong> — 6-night stay.</li>
+              </ul>
+              <p className="hint" style={{marginTop:6}}>The combination of tiers × periods defines a 2 × 3 price structure.</p>
+            </div>
+          </div>
+          <p style={{marginTop:10}}>
+            To calibrate willingness-to-pay, the team surveyed <strong>95 people</strong> — covering demographics,
+            travel habits and the maximum price they would pay in six different rental scenarios. The marketing
+            department identified <strong>three competitors</strong> in the relevant market —
+            <em> Further VAN experience, People Camper, Ocean Vans</em> — currently operating only with daily
+            tariffs. The commercial team must now decide, for each period × version: <em>how much to charge, where
+            to sit versus the competition and how to frame the number</em> (psychological factors).
+          </p>
+          <p className="note" style={{marginTop:6}}>Everything below — WTP data, competitor prices, cost
+            structure, psychological-factor framework — is preloaded in the tabs above so you can run the decision
+            end-to-end and download the result.</p>
+        </div>
+
+        <div className="card" style={{background:'#fef3c7', borderColor:'#f59e0b'}}>
+          <h2 style={{color:'#92400e'}}>⚠ Data note — read before using</h2>
+          <p className="note" style={{color:'#78350f'}}>
+            <strong>The dataset is not complete.</strong> The three competitors (Further VAN, People Camper, Ocean Vans) <em>only publish daily tariffs</em>. The weekend and weekly prices shown in the simulator are <strong>estimated aggregates derived from the daily tariff</strong> (weekend ≈ −5 % per day, week ≈ −30 % per day) — treat them as reference scenarios, not as observed data. You can override every number on the <em>Position &amp; prices</em> tab if you have fresher competitive intelligence. The Nomade WTP data itself is real (95 survey respondents).
+          </p>
+        </div>
+
         <div className="card">
           <h2>How to use the simulator — in 5 steps</h2>
           <ol className="step-list">
@@ -881,6 +988,12 @@ function App() {
 
       {/* ----- Tab: Competition-based ----- */}
       {tab==='overview' && (<>
+        <div className="card" style={{background:'#fef3c7', borderColor:'#f59e0b'}}>
+          <p className="note" style={{color:'#78350f', margin:0}}>
+            <strong>⚠ Data note:</strong> competitors publish <em>daily</em> tariffs only. Weekend and weekly prices here are <strong>estimated aggregates from the daily rate</strong> (≈ −5 % per day weekend, ≈ −30 % per day week). Override any number on the <em>Position &amp; prices</em> tab if you have better data.
+          </p>
+        </div>
+
         <div className="card">
           <h2>Graph picker — Competition-based</h2>
           <p className="note">Tick the graphs you want on the board. Toggle as many as you like.</p>
@@ -1150,6 +1263,36 @@ function App() {
           <p className="note">Free text — reasoning, assumptions, stakeholder alignment, etc. It ships inside the Excel.</p>
           <textarea rows="4" value={positionNote} onChange={e=>setPositionNote(e.target.value)}
             placeholder="e.g. We chose to sit €5 under People Camper to open the weekend segment."/>
+        </div>
+      </>)}
+
+      {/* ----- Tab: Case answers ----- */}
+      {tab==='answers' && (<>
+        <div className="card">
+          <h2>Case deliverables — the three formal questions</h2>
+          <div className="explain">
+            These are the three formal questions of the Nomade Vans case. Write your answer below — everything you type here is saved with your session and <strong>exported to the Excel download</strong> in a dedicated "Case answers" sheet together with your position, competitor prices and every chart.
+          </div>
+          <p className="note">Use the interactive tabs (Competition-based, Psychological factors, Position &amp; prices) to produce the evidence, then summarise it here.</p>
+        </div>
+
+        {CASE_QUESTIONS.map((q, idx) => (
+          <div className="card" key={q.id}>
+            <h3 style={{color:'#f97316'}}>{q.id} — {q.title}</h3>
+            <div className="explain orange"><strong>Prompt:</strong> {q.prompt}</div>
+            <div className="explain"><strong>Simulator tip:</strong> {q.hint}</div>
+            <label style={{marginTop:8}}>Your answer</label>
+            <textarea rows={idx===0 ? 8 : 10}
+              value={caseAnswers[q.id.toLowerCase()]}
+              onChange={e => setCaseAnswers(prev => ({...prev, [q.id.toLowerCase()]: e.target.value}))}
+              placeholder={`Answer ${q.id} here — the text travels into your Excel download.`} />
+            <p className="hint">{caseAnswers[q.id.toLowerCase()].length} characters · auto-saved in the session.</p>
+          </div>
+        ))}
+
+        <div className="card">
+          <h3>When you are ready</h3>
+          <p className="note">Go to <strong>Download Excel</strong> to get the .xlsx with your answers, position and charts. The file will contain an additional sheet called <em>Case answers</em>.</p>
         </div>
       </>)}
 
