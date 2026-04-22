@@ -318,7 +318,9 @@ def build():
         run = p.add_run(f'{qid}. '); run.bold = True
         p.add_run(text)
 
-    out = 'Nomade_Vans_Case_Study_Simulator_Edition.docx'
+    from datetime import datetime
+    stamp = datetime.now().strftime('%Y-%m-%d')
+    out = f'Nomade_Vans_Case_v3.1_Simulator_Edition_{stamp}.docx'
     doc.save(out)
     print('Saved:', out)
 
