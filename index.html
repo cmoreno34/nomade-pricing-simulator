@@ -950,7 +950,8 @@ function App() {
             <li>Go to <strong>Competition-based</strong>. Tick the graphs you want to see and <strong>drag the green line on the Profit curve</strong> — KPIs for profit, demand, revenue and lost-vs-peak update live. Quick-jump buttons let you snap to the peak or to each competitor's price.</li>
             <li>Go to <strong>Psychological factors</strong>. Try a three-tier menu (anchoring), test charm pricing, explore Prospect Theory and set a reference price.</li>
             <li>Open <strong>Position &amp; prices</strong>. Change your own prices (via chart or numeric inputs), change the competitors', add a free-text note.</li>
-            <li>Open <strong>Download Excel</strong>. One click produces a <code>.xlsx</code> with the questions, the answers, your position and all the charts as images.</li>
+            <li>Open <strong>Case answers</strong>, write your answer to each of the three formal questions.</li>
+            <li>Open <strong>Download Excel</strong>. One click produces the <code>.xlsx</code> that is <strong>the whole deliverable</strong> — case background, questions, answers, your final position, your written Case answers and every chart as an image. No Word / PowerPoint needed.</li>
           </ol>
           <div className="explain green" style={{marginTop:12}}>
             <strong>New — interactive chart.</strong> On the <em>Profit curve</em> the green line is your price. <strong>Click on the chart or drag horizontally</strong> to position it. The three coloured dashed lines are Further VAN, People Camper and Ocean Vans — the curve height at each tells you what profit you would make <em>if you priced like them</em>. If moving <em>toward</em> a competitor raises the curve, it pays to move up; if it lowers it, stay put.
@@ -1299,18 +1300,22 @@ function App() {
       {/* ----- Tab: Download Excel ----- */}
       {tab==='download' && (
         <div className="card">
-          <h2>Download — Questions, Answers, Position &amp; Charts in one Excel</h2>
+          <h2>Download — the Excel file is the whole deliverable</h2>
+          <div className="explain green">
+            <strong>Submit this file alone.</strong> No Word document or slide deck is required. The <code>.xlsx</code> contains every piece of evidence: case background, questions, aggregated answers, your final position, your written Case answers and all nine charts as images.
+          </div>
           <p className="note">
-            Produces a single <code>.xlsx</code> with <strong>7 sheets</strong>. Opens natively in Excel, Numbers, Google Sheets and LibreOffice.
+            8 sheets — opens natively in Excel, Numbers, Google Sheets and LibreOffice.
           </p>
           <div className="grid-2">
             <div className="box-soft">
-              <h3>What is inside the file</h3>
+              <h3>What is inside the file — 8 sheets</h3>
               <ul style={{margin:'4px 0 0 18px', padding:0}}>
-                <li><strong>Guide</strong> — short explanation of the file</li>
-                <li><strong>Questions</strong> — the 13 survey questions (text, type, options)</li>
-                <li><strong>Answers — Day / Weekend / Week</strong> — aggregated WTP tables (price, responses, %, cum. acceptance)</li>
-                <li><strong>Position</strong> — your prices, competitors, KPIs, psychological parameters and free-text note</li>
+                <li><strong>Guide</strong> — case background, data note, active view</li>
+                <li><strong>Questions</strong> — the 13 survey questions (reference only)</li>
+                <li><strong>Answers — Day / Weekend / Week</strong> — aggregated WTP tables</li>
+                <li><strong>Position</strong> — your prices, competitors, KPIs, psychological parameters, analyst note</li>
+                <li><strong>Case answers</strong> — your written answers to the three formal questions</li>
                 <li><strong>Charts</strong> — all 9 simulator charts as embedded images</li>
               </ul>
             </div>

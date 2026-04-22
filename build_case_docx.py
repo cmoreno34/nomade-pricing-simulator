@@ -279,44 +279,71 @@ def build():
 
     # ---------- 8. Evaluation ----------
     doc.add_page_break()
-    h(doc, '7. Criterios de evaluación · Evaluation criteria')
-    bullet(doc, 'Rigour (simulator evidence: screenshots, Excel, numbers).')
-    bullet(doc, 'Integration of competition + WTP + psychological factors.')
-    bullet(doc, 'Clarity & brevity — numbers justified, trade-offs explicit.')
-    bullet(doc, 'Attached Excel export with final prices, position, Case answers and chart images.')
+    h(doc, '7. Evaluation criteria')
+    bullet(doc, 'Rigour — evidence inside the simulator (drag results, screenshots, numbers).')
+    bullet(doc, 'Integration of competition + WTP + psychological factors into a single recommendation.')
+    bullet(doc, 'Clarity and brevity — numbers justified, trade-offs explicit.')
+    bullet(doc, 'Case answers written inside the simulator before the Excel is downloaded.')
 
-    h(doc, 'Entregables · Deliverables', level=2)
-    numbered(doc, 'This workbook (Word), every answer box filled in — OR case answers written inside the simulator.')
-    numbered(doc, 'The Excel (.xlsx) downloaded from the simulator — Guide, Questions, Answers (Day/Weekend/Week), Position, Case answers, Charts.')
-    numbered(doc, 'A one-page executive summary.')
+    h(doc, 'Deliverable', level=2)
+    para(doc,
+         'The Excel (.xlsx) downloaded from the simulator is enough. Submit that file alone — '
+         'it already contains every piece of evidence required:',
+         bold=False)
+    bullet(doc, 'Guide — case background, data note and active view.')
+    bullet(doc, 'Questions — the 13 survey items (reference only).')
+    bullet(doc, 'Answers — Day / Weekend / Week — aggregated WTP distributions.')
+    bullet(doc, 'Position — your final prices, competitor prices, peak / gap / acceptance KPIs and the analyst note.')
+    bullet(doc, 'Case answers — your written answers to the three formal questions.')
+    bullet(doc, 'Charts — the nine simulator charts embedded as images.')
+    para(doc,
+         'Before downloading, make sure you have filled the three Case answers and set the final '
+         'prices in Position & prices. No additional Word or PowerPoint file is required.',
+         italic=True, color=GREY)
 
     # ---------- APPENDIX ----------
     doc.add_page_break()
-    h(doc, 'Anexo · Appendix — The 13 survey questions (reference)')
+    h(doc, 'Appendix — The 13 survey questions (reference only)')
     para(doc,
-         'These are the 13 items asked to the 95 survey respondents. They appear here for '
-         'reference so that you can interpret the aggregated WTP distribution displayed by '
-         'the simulator. You are NOT asked to answer them yourself.', italic=True, color=GREY)
+         'These are the 13 items asked to the 95 survey respondents. They appear here only as '
+         'reference so that you can interpret the aggregated WTP distribution displayed by the '
+         'simulator. You are NOT asked to answer them yourself. Original Spanish wording in italics.',
+         italic=True, color=GREY)
 
     items = [
-        ('Q1',  'Por favor, indique su género.'),
-        ('Q2',  '¿En qué rango de edad se encuentra?  <20 / 20-30 / 30-40 / 40-50 / 50-60 / >60'),
-        ('Q3',  '¿Cuál es su estado civil?  Soltero / Casado / Divorciado / Viudo'),
-        ('Q4',  '¿Cuál es su nivel de educación?  Primaria / Secundaria / Grado / Máster o Posgrado'),
-        ('Q5',  'Seleccione su situación laboral.  Empleado / Autónomo / Desempleado / Jubilado / Estudiante'),
-        ('Q6',  '¿Qué le gusta hacer en su tiempo libre? (Multi-select)  Viajar · Leer · Deporte · Aventura · Familia · Otras'),
-        ('Q7',  '¿Cuántos días sueles irte de vacaciones?  <3 / 3-5 / 5-7 / >7'),
-        ('Q8',  'Precio máximo dispuesto a pagar — camper ESTÁNDAR al día.'),
-        ('Q9',  'Precio máximo dispuesto a pagar — camper ESTÁNDAR fin de semana (2 noches).'),
-        ('Q10', 'Precio máximo dispuesto a pagar — camper ESTÁNDAR semana (6 noches).'),
-        ('Q11', 'Precio máximo dispuesto a pagar — camper PREMIUM al día.'),
-        ('Q12', 'Precio máximo dispuesto a pagar — camper PREMIUM fin de semana (2 noches).'),
-        ('Q13', 'Precio máximo dispuesto a pagar — camper PREMIUM semana (6 noches).'),
+        ('Q1',  'Please indicate your gender.',
+                'Por favor, indique su género.'),
+        ('Q2',  'What age range are you in?  <20 / 20-30 / 30-40 / 40-50 / 50-60 / >60',
+                '¿En qué rango de edad se encuentra?'),
+        ('Q3',  'What is your civil status?  Single / Married / Divorced / Widowed',
+                '¿Cuál es su estado civil?'),
+        ('Q4',  'What is your level of education?  Primary / Secondary / University / Master or PhD',
+                '¿Cuál es su nivel de educación?'),
+        ('Q5',  'Select your employment status.  Employed / Self-employed / Unemployed / Retired / Student',
+                'Seleccione su situación laboral.'),
+        ('Q6',  'What do you like to do in your free time? (multiple choice)  Travel · Reading · Sports · Adventure · Family time · Other',
+                '¿Qué le gusta hacer en su tiempo libre?'),
+        ('Q7',  'How many days do you usually go on vacation?  <3 / 3-5 / 5-7 / >7',
+                '¿Cuántos días sueles irte de vacaciones?'),
+        ('Q8',  'Maximum price you are willing to pay — STANDARD camper, per day.',
+                'Precio máximo por el alquiler de una camper ESTÁNDAR al día.'),
+        ('Q9',  'Maximum price you are willing to pay — STANDARD camper, weekend (2 nights).',
+                'Precio máximo — camper ESTÁNDAR fin de semana (2 noches).'),
+        ('Q10', 'Maximum price you are willing to pay — STANDARD camper, week (6 nights).',
+                'Precio máximo — camper ESTÁNDAR semana (6 noches).'),
+        ('Q11', 'Maximum price you are willing to pay — PREMIUM camper, per day.',
+                'Precio máximo — camper PREMIUM al día.'),
+        ('Q12', 'Maximum price you are willing to pay — PREMIUM camper, weekend (2 nights).',
+                'Precio máximo — camper PREMIUM fin de semana (2 noches).'),
+        ('Q13', 'Maximum price you are willing to pay — PREMIUM camper, week (6 nights).',
+                'Precio máximo — camper PREMIUM semana (6 noches).'),
     ]
-    for qid, text in items:
+    for qid, english, spanish in items:
         p = doc.add_paragraph()
         run = p.add_run(f'{qid}. '); run.bold = True
-        p.add_run(text)
+        p.add_run(english)
+        p2 = doc.add_paragraph()
+        r2 = p2.add_run(spanish); r2.italic = True; r2.font.color.rgb = GREY; r2.font.size = Pt(10)
 
     from datetime import datetime
     stamp = datetime.now().strftime('%Y-%m-%d')
