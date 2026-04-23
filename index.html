@@ -312,23 +312,28 @@ function App() {
   const [positionNote, setPositionNote] = useState('');
   const [psychSynced, setPsychSynced] = useState(0); /* bump forces reset from position */
 
-  /* Case deliverables — 3 formal questions from Nomade v2.0 */
-  const [caseAnswers, setCaseAnswers] = useState({ q1: '', q2: '', q3: '' });
+  /* Case deliverables — 4 formal questions from Nomade v3.0 */
+  const [caseAnswers, setCaseAnswers] = useState({ q1: '', q2: '', q3: '', q4: '' });
   const CASE_QUESTIONS = [
     { id: 'Q1',
-      title: 'Assumptions — competitors\' cost structure & brand-value differentiation',
-      prompt: 'Give assumptions of competitors\' cost structures and brand-value differentiation compared to NOMADE. Consider that NOMADE is new, and the others are well-established.',
-      hint: 'Use Competition-based → Profit curve. Read profit at each competitor\'s dashed line. Contrast with assumed fixed-cost structure and brand positioning (design, sustainability, customisation).'
+      title: 'Competitive analysis & positioning',
+      prompt: 'With the data provided and the tool: (a) give assumptions about the competitors\' cost structures and their brand-value differentiation; (b) remember NOMADE is NEW while the others are well-established; (c) for each competitor, evaluate whether their higher price is driven by (i) higher operating costs, or (ii) higher differentiation (brand recognition, quality, features); (d) build a positioning map of Nomade vs. competitors on the key attributes.',
+      hint: 'Open Competition-based → Profit curve. Read profit at each competitor\'s dashed line. Nomade profile in the case: Establishment 2/10, Brand recognition 3/10, Sustainability 10/10. Competitor profile: Further VAN (8/8/5), People Camper (9/9/4), Ocean Vans (9/9/6).'
     },
     { id: 'Q2',
-      title: 'Competitive strategy',
-      prompt: 'Suggest a competitive strategy for Nomade, indicating whether Nomade can improve its market position with a strategic view. Also consider possible psychological factors.',
-      hint: 'Drag the green line and use Match-competitor / Snap-to-peak buttons. Then use Psychological factors (Anchoring, Charm, Prospect Theory, Reference price) and the Apply-to-position buttons to push tested numbers into your final price.'
+      title: 'Apply the 4-scenario strategic framework',
+      prompt: 'Using the 4-scenario framework of the technical note: (a) identify which scenario applies to Nomade for each version (Standard / Premium); (b) is Popt > or < the competitors\' prices? (c) is the reason cost structure or differentiation? (d) given the scenario should Nomade pursue penetration (−) / aggressive penetration (−−), skimming (+) / fast-aggressive skimming (++), or do nothing? (e) justify with competition theory and the WTP profit analysis.',
+      hint: 'Popt for Nomade (v3 baseline): Std €80, Prem €100. Competitor range Std €85–€105, Prem €95–€129 → Popt < C. Cost structure similar/slightly better (sustainable-design efficiency). Differentiation HIGHER but BRAND low. Scenario b.3 applies (Popt < C because perceived as less differentiated despite objectively superior features). Recommendation: SKIMMING (+) — moderate price increase to build brand anchor.'
     },
     { id: 'Q3',
-      title: 'Pricing implementation & promotional actions',
-      prompt: 'Suggest a pricing implementation strategy with the final list prices and elaborate on possible promotional actions.',
-      hint: 'Fix prices on the Position & prices tab for every period × version. Propose 2–3 promotions (early-bird, loyalty, charm endings, good-better-best bundle) — target segment, price lever, expected pain/gain (Prospect Theory).'
+      title: 'Weekend / week pricing strategy',
+      prompt: 'Competitor data is DAILY only. (a) Start with daily pricing decisions (WTP optimum + competitive positioning); (b) assume industry standards for weekend (5–10 % per-day discount) and week (20–30 % total discount) to estimate competitor tariffs; (c) propose Nomade\'s weekend / week prices; (d) use anchoring (daily × 7 vs weekly price); (e) build a "sandwich" between Standard and Premium.',
+      hint: 'On the Position & prices tab, switch between Day, Weekend and Week. Compare our per-day price to the "daily × 7" anchor. On Psychological factors → Anchoring, the default basic / mid / premium is already based on your current position — tweak the middle to be the target, then click Apply-to-position.'
+    },
+    { id: 'Q4',
+      title: 'Complete pricing proposal',
+      prompt: 'Deliver the final pricing strategy with full justification: (a) complete price table (Standard/Premium × Day/Weekend/Week); (b) comparison vs competitors (using your weekend/week assumptions); (c) justification — WTP analysis (profit curves), competitive positioning (differentiation vs costs), psychological tactics (anchoring, sandwich, charm); (d) expected business outcomes (profit, market positioning); (e) consider alternative structures (e.g., 3-tier with "enhanced" version); (f) risk mitigation (competitor reactions).',
+      hint: 'Set every final price in Position & prices. The Excel download already carries: your prices, competitor prices, peak profit, acceptance %, gap vs average, psychological parameters, charts and your Case answers. This sheet IS the proposal.'
     }
   ];
 
@@ -950,12 +955,33 @@ function App() {
             <li>Go to <strong>Competition-based</strong>. Tick the graphs you want to see and <strong>drag the green line on the Profit curve</strong> — KPIs for profit, demand, revenue and lost-vs-peak update live. Quick-jump buttons let you snap to the peak or to each competitor's price.</li>
             <li>Go to <strong>Psychological factors</strong>. Try a three-tier menu (anchoring), test charm pricing, explore Prospect Theory and set a reference price.</li>
             <li>Open <strong>Position &amp; prices</strong>. Change your own prices (via chart or numeric inputs), change the competitors', add a free-text note.</li>
-            <li>Open <strong>Case answers</strong>, write your answer to each of the three formal questions.</li>
+            <li>Open <strong>Case answers</strong>, write your answer to each of the four formal questions.</li>
             <li>Open <strong>Download Excel</strong>. One click produces the <code>.xlsx</code> that is <strong>the whole deliverable</strong> — case background, questions, answers, your final position, your written Case answers and every chart as an image. No Word / PowerPoint needed.</li>
           </ol>
           <div className="explain green" style={{marginTop:12}}>
-            <strong>New — interactive chart.</strong> On the <em>Profit curve</em> the green line is your price. <strong>Click on the chart or drag horizontally</strong> to position it. The three coloured dashed lines are Further VAN, People Camper and Ocean Vans — the curve height at each tells you what profit you would make <em>if you priced like them</em>. If moving <em>toward</em> a competitor raises the curve, it pays to move up; if it lowers it, stay put.
+            <strong>Interactive chart.</strong> On the <em>Profit curve</em> the green line is your price. <strong>Click on the chart or drag horizontally</strong> to position it. The three coloured dashed lines are Further VAN, People Camper and Ocean Vans — the curve height at each tells you what profit you would make <em>if you priced like them</em>. If moving <em>toward</em> a competitor raises the curve, it pays to move up; if it lowers it, stay put.
           </div>
+        </div>
+
+        <div className="card" style={{background:'#eff6ff', borderColor:'#2563eb'}}>
+          <h2 style={{color:'#1e3a8a'}}>Every tab is coordinated — this is a closed loop, not four independent worksheets</h2>
+          <p className="note" style={{color:'#1e3a8a', marginBottom:8}}>
+            The Nomade price lives in <strong>one place</strong> in memory and is re-used everywhere. Changing it on any tab updates all the other tabs instantly, and all the KPIs with it. You do <em>not</em> have to re-enter the same number on each tab.
+          </p>
+          <div style={{background:'#fff', borderRadius:10, padding:12, border:'1px solid #bfdbfe', fontSize:'.88rem', lineHeight:1.7}}>
+            <div><strong>① Competition-based</strong> — drag the green line on the Profit curve (or <em>Match-competitor / Snap-to-peak</em>). <span style={{color:'#64748b'}}>Writes the Nomade price.</span></div>
+            <div style={{color:'#64748b', paddingLeft:18}}>↓</div>
+            <div><strong>② Psychological factors</strong> — anchoring / charm / prospect / reference are <em>pre-loaded</em> from ①. Experiment, then click <em>Apply to Standard / Premium</em>. <span style={{color:'#64748b'}}>Writes the Nomade price again.</span></div>
+            <div style={{color:'#64748b', paddingLeft:18}}>↓</div>
+            <div><strong>③ Position &amp; prices</strong> — the <strong>same interactive chart</strong> + numeric inputs. This tab is the <em>final</em> view: whatever is here ends up in the Excel. Add your analyst note here.</div>
+            <div style={{color:'#64748b', paddingLeft:18}}>↓</div>
+            <div><strong>④ Case answers</strong> — write the answers to the four formal questions.</div>
+            <div style={{color:'#64748b', paddingLeft:18}}>↓</div>
+            <div><strong>⑤ Download Excel</strong> — snapshots <em>your price</em>, competitors, KPIs, psych parameters, answers and charts → single .xlsx.</div>
+          </div>
+          <p className="note" style={{marginTop:10, color:'#1e3a8a'}}>
+            <strong>In short:</strong> <em>Competition-based</em> and <em>Psychological factors</em> are your <em>experimentation labs</em>; <em>Position &amp; prices</em> is the <em>final</em> number; <em>Case answers</em> is where you justify it; <em>Download Excel</em> packages the whole thing.
+          </p>
         </div>
 
         <div className="card">
@@ -1270,9 +1296,9 @@ function App() {
       {/* ----- Tab: Case answers ----- */}
       {tab==='answers' && (<>
         <div className="card">
-          <h2>Case deliverables — the three formal questions</h2>
+          <h2>Case deliverables — the four formal questions (Nomade v3.0)</h2>
           <div className="explain">
-            These are the three formal questions of the Nomade Vans case. Write your answer below — everything you type here is saved with your session and <strong>exported to the Excel download</strong> in a dedicated "Case answers" sheet together with your position, competitor prices and every chart.
+            These are the four formal questions of the Nomade Vans case (v3.0). Write your answer below — everything you type here is saved with your session and <strong>exported to the Excel download</strong> in a dedicated "Case answers" sheet together with your position, competitor prices and every chart.
           </div>
           <p className="note">Use the interactive tabs (Competition-based, Psychological factors, Position &amp; prices) to produce the evidence, then summarise it here.</p>
         </div>

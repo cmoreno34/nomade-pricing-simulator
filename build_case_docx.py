@@ -1,9 +1,10 @@
 """
-Build the Word workbook for the Nomade Vans case, adapted to the interactive
-pricing simulator. Deliverables = the three formal questions from Nomade v2.0.
-The 13 survey items stay as a reference appendix (what respondents were asked),
-NOT as student tasks.
+Build the Word workbook for the Nomade Vans case — aligned to Nomade v3.0
+(4 formal questions, strategic 4-scenario framework, competitor attributes,
+daily-only competitor data disclaimer). The interactive simulator covers the
+experimentation; this workbook is the paper reference.
 """
+from datetime import datetime
 from docx import Document
 from docx.shared import Pt, Cm, RGBColor
 from docx.enum.text import WD_ALIGN_PARAGRAPH
@@ -67,13 +68,21 @@ def note_box(doc, text, fill='FEF3C7', title='⚠ Data note', title_color=AMBER)
     doc.add_paragraph()
 
 
-def answer_box(doc, lines=8):
+def answer_box(doc, lines=10):
     tbl = doc.add_table(rows=1, cols=1)
     cell = tbl.cell(0, 0)
     set_cell_bg(cell, 'F8FAFC')
     p = cell.paragraphs[0]
     p.add_run('\n' * (lines - 1))
     doc.add_paragraph()
+
+
+def make_header_row(tbl, headers):
+    for i, txt in enumerate(headers):
+        cell = tbl.rows[0].cells[i]
+        cell.text = txt
+        for r in cell.paragraphs[0].runs:
+            r.bold = True
 
 
 def build():
@@ -83,222 +92,265 @@ def build():
     style.font.size = Pt(11)
 
     # ---------- Cover ----------
-    t = doc.add_paragraph()
-    t.alignment = WD_ALIGN_PARAGRAPH.CENTER
-    r = t.add_run('CASO PRÁCTICO · CASE STUDY')
+    t = doc.add_paragraph(); t.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    r = t.add_run('INTERACTIVE PRICING STRATEGY — CASE STUDY')
     r.bold = True; r.font.size = Pt(13); r.font.color.rgb = GREY
 
-    t = doc.add_paragraph()
-    t.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    t = doc.add_paragraph(); t.alignment = WD_ALIGN_PARAGRAPH.CENTER
     r = t.add_run('Nomade Vans — Pricing under Competition and Psychological Factors')
     r.bold = True; r.font.size = Pt(22); r.font.color.rgb = BLUE
 
-    sub = doc.add_paragraph()
-    sub.alignment = WD_ALIGN_PARAGRAPH.CENTER
-    r = sub.add_run('Simulator-driven edition · v3.1 — student workbook')
+    sub = doc.add_paragraph(); sub.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    r = sub.add_run('Simulator-driven edition · aligned to Nomade v3.0 — student workbook')
     r.italic = True; r.font.size = Pt(12); r.font.color.rgb = GREY
 
     doc.add_paragraph()
-    meta = doc.add_paragraph()
-    meta.alignment = WD_ALIGN_PARAGRAPH.CENTER
-    meta.add_run('© César Moreno Pascual PhD — based on Nomade v2.0 by Ariane Atucha, Ángela Pesquera, Irache Gallego, Paula García\n').italic = True
+    meta = doc.add_paragraph(); meta.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    meta.add_run('© César Moreno Pascual PhD — based on Nomade v2.0 / v3.0\n').italic = True
     meta.add_run('Interactive simulator: ').italic = True
-    link = meta.add_run(SIMULATOR_URL)
-    link.font.color.rgb = BLUE; link.underline = True
+    link = meta.add_run(SIMULATOR_URL); link.font.color.rgb = BLUE; link.underline = True
 
     doc.add_page_break()
 
-    # ---------- 1. The story ----------
-    h(doc, '1. The story · El caso')
+    # ---------- 1. Company summary ----------
+    h(doc, '1. Company summary')
     para(doc,
-         "Nomade Vans es una empresa española que se centra en el diseño y la «camperización» "
-         "de furgonetas sostenibles. Permite a los consumidores personalizar el producto a través "
-         "de su web y promete cumplir con un plazo de entrega de un mes. A diferencia de otras "
-         "empresas del sector, emplea un diseño único y coherente con los valores de "
-         "sostenibilidad y el entorno natural.")
-    para(doc,
-         "Tras diseñar y camperizar furgonetas para la venta directa, se plantea la posibilidad "
-         "de iniciar una nueva línea de negocio basada en el alquiler de camper vans. Para ello "
-         "se establecen dos niveles de servicio — Standard y Premium — y tres métricas temporales "
-         "— día, fin de semana (2 noches) y semana (6 noches). La combinación de tiers y periodos "
-         "define una estructura de precios 2 × 3.")
-    para(doc,
-         "Nomade Vans is a Spanish start-up designing sustainable camperised vans. Two service "
-         "tiers (Standard and Premium) and three rental periods (Day / Weekend / Week) define "
-         "the price structure. To calibrate willingness-to-pay the team surveyed 95 people, and "
-         "marketing identified three competitors — Further VAN experience, People Camper and "
-         "Ocean Vans — currently operating only with daily tariffs.",
-         italic=True, size=10, color=GREY)
+         "Nomade Vans is a NEW entrant in the campervan rental market, specialised "
+         "in sustainable and highly customisable van designs with fast delivery "
+         "(within 1 month). Despite its superior features it faces the classic "
+         "challenge of low brand awareness while competing against well-established "
+         "incumbents.")
+    tbl = doc.add_table(rows=6, cols=3); tbl.style = 'Light Grid Accent 1'
+    make_header_row(tbl, ['Attribute', 'Nomade', 'Market average'])
+    for i, row in enumerate([
+        ('Market position',     'NEW ENTRANT',  'Established (8–9/10)'),
+        ('Sustainability',      '10/10',        '4–6/10'),
+        ('Customisation',       '10/10',        '3–6/10'),
+        ('Brand recognition',   '3/10',         '8–9/10'),
+        ('Service quality',     '7/10',         '7–9/10'),
+    ], 1):
+        for j, v in enumerate(row):
+            tbl.rows[i].cells[j].text = v
+    doc.add_paragraph()
 
     # ---------- 2. Data note ----------
     note_box(doc,
-             "The three competitors publish DAILY tariffs only. Weekend and weekly prices "
-             "shown throughout the simulator are ESTIMATES aggregated from the daily tariff "
-             "(weekend ≈ −5 % per day, week ≈ −30 % per day). Treat them as reference "
-             "scenarios, not observed data. Any number can be overridden on the "
-             "Position & prices tab. The Nomade WTP data itself is real (95 respondents).",
-             title='⚠ Data note — dataset is incomplete')
+             "Competitor prices are only published as DAILY tariffs. Weekend "
+             "and weekly rates in the simulator are ESTIMATES aggregated from "
+             "the daily tariff (industry convention: weekend ≈ 5–10 % per-day "
+             "discount, week ≈ 20–30 % total discount). Treat them as reference "
+             "scenarios. Nomade WTP data itself is real (95 respondents).",
+             title='⚠ Data note — incomplete dataset (v3.0)')
 
-    # ---------- 3. Price structure (v2.0 optima) ----------
-    h(doc, '2. Estructura de precios óptimos sin segmentar (Nomade v2.0 baseline)')
-    tbl = doc.add_table(rows=3, cols=5)
-    tbl.style = 'Light Grid Accent 1'
-    for i, txt in enumerate(['', 'Day', 'Weekend (total)', 'Week (total)', 'Per-day price']):
-        cell = tbl.rows[0].cells[i]; cell.text = txt
-        for r in cell.paragraphs[0].runs: r.bold = True
-    rows = [
-        ('Standard', '80 €',  '120 €', '420 €', '60 € weekend / 60 € week'),
-        ('Premium',  '100 €', '160 €', '540 €', '80 € weekend / 77 € week'),
-    ]
-    for i, row in enumerate(rows, 1):
-        for j, val in enumerate(row):
-            tbl.rows[i].cells[j].text = val
-    doc.add_paragraph()
+    # ---------- 3. Data available ----------
+    h(doc, '2. Data available')
 
-    # ---------- 4. Cost structure ----------
-    h(doc, '3. Estructura de costes · Cost structure')
-    tbl = doc.add_table(rows=4, cols=3)
-    tbl.style = 'Light Grid Accent 1'
-    for i, txt in enumerate(['Item', 'Standard', 'Premium']):
-        cell = tbl.rows[0].cells[i]; cell.text = txt
-        for r in cell.paragraphs[0].runs: r.bold = True
+    # 2.1 Standard survey
+    h(doc, '2.1 Survey — Standard camper (WTP)', level=2)
+    for lbl, prices, resps in [
+        ('Daily rentals',            [50,60,70,80,90,100,110,120,130],  [17,14,10,16,12,19,2,4,1]),
+        ('Weekend (2-night) rentals',[80,100,120,140,160,180,200],      [12,7,18,13,11,15,11]),
+        ('Weekly (7-night) rentals', [240,300,360,420,480,540,600,660,720],[14,10,10,15,15,8,10,3,6]),
+    ]:
+        para(doc, lbl, bold=True)
+        tbl = doc.add_table(rows=2, cols=len(prices)+1); tbl.style = 'Light Grid Accent 1'
+        tbl.rows[0].cells[0].text = 'Price (€)'
+        tbl.rows[1].cells[0].text = 'Responses'
+        for i, p in enumerate(prices, 1):
+            tbl.rows[0].cells[i].text = str(p)
+            tbl.rows[1].cells[i].text = str(resps[i-1])
+        doc.add_paragraph()
+
+    # 2.2 Premium survey
+    h(doc, '2.2 Survey — Premium camper (WTP)', level=2)
+    for lbl, prices, resps in [
+        ('Daily rentals',            [60,70,80,90,100,110,120,130,140,150,160,180,200], [10,5,12,8,14,12,19,5,3,4,1,1,1]),
+        ('Weekend (2-night) rentals',[120,140,160,180,200,220,240,260,280],              [10,6,13,8,22,2,18,4,2]),
+        ('Weekly (7-night) rentals', [360,420,480,540,600,660,720,780,840],              [14,7,4,13,17,8,13,7,3]),
+    ]:
+        para(doc, lbl, bold=True)
+        tbl = doc.add_table(rows=2, cols=len(prices)+1); tbl.style = 'Light Grid Accent 1'
+        tbl.rows[0].cells[0].text = 'Price (€)'
+        tbl.rows[1].cells[0].text = 'Responses'
+        for i, p in enumerate(prices, 1):
+            tbl.rows[0].cells[i].text = str(p)
+            tbl.rows[1].cells[i].text = str(resps[i-1])
+        doc.add_paragraph()
+
+    # 2.3 Cost structure
+    h(doc, '2.3 Cost structure', level=2)
+    tbl = doc.add_table(rows=4, cols=4); tbl.style = 'Light Grid Accent 1'
+    make_header_row(tbl, ['Item', 'Daily', 'Weekend', 'Weekly'])
     for i, row in enumerate([
-        ('Variable cost per rental (VC)', '30 €',     '30 €'),
-        ('Fixed cost per year (CF)',     '69.750 €', '77.750 €'),
-        ('Demand potential (D)',         '5.000',    '5.000'),
+        ('Variable cost (€/day)',       '30', '30', '30'),
+        ('Fixed cost (€/year)',         '69,750 (Std) / 77,750 (Prem)', '—', '—'),
+        ('Average demand (rentals/yr)', '5,000', '1,825', '521.43'),
     ], 1):
-        for j, val in enumerate(row):
-            tbl.rows[i].cells[j].text = val
+        for j, v in enumerate(row):
+            tbl.rows[i].cells[j].text = v
     doc.add_paragraph()
-    para(doc,
-         "Demand scaling: day × 1.0, weekend × 0.365 (≈ 182 rentals/year), "
-         "week × 0.0743 (≈ 52 rentals/year).", italic=True, size=10, color=GREY)
 
-    # ---------- 5. Competitors ----------
-    h(doc, '4. Competidores · Competitors (daily tariff — the only one published)')
-    tbl = doc.add_table(rows=4, cols=3)
-    tbl.style = 'Light Grid Accent 1'
-    for i, txt in enumerate(['Competitor', 'Standard (€)', 'Premium (€)']):
-        cell = tbl.rows[0].cells[i]; cell.text = txt
-        for r in cell.paragraphs[0].runs: r.bold = True
+    # 2.4 Competitors (with attributes)
+    h(doc, '2.4 Competitor data (daily tariffs only)', level=2)
+    tbl = doc.add_table(rows=5, cols=7); tbl.style = 'Light Grid Accent 1'
+    make_header_row(tbl, ['Competitor','Std (€/d)','Prem (€/d)','Gap (€)','Establishment 0–10','Brand 0–10','Sustainability 0–10'])
     for i, row in enumerate([
-        ('Further VAN experience', '85',  '95'),
-        ('People Camper',          '105', '115'),
-        ('Ocean Vans',             '98',  '129'),
+        ('Further VAN',   '85', '95', '10', '8', '8', '5'),
+        ('People Camper', '105','115','10', '9', '9', '4'),
+        ('Ocean Vans',    '98', '129','31', '9', '9', '6'),
+        ('Nomade',        '80', '100','20', '2', '3', '10'),
     ], 1):
-        for j, val in enumerate(row):
-            tbl.rows[i].cells[j].text = val
+        for j, v in enumerate(row):
+            tbl.rows[i].cells[j].text = v
     doc.add_paragraph()
+    para(doc, 'Competitor profiles:', bold=True)
+    bullet(doc, 'Further VAN — well-established, affordable. Less differentiated; likely operational-efficiency focus.')
+    bullet(doc, 'People Camper — premium brand, high-end positioning. Likely higher costs or a significant brand premium.')
+    bullet(doc, 'Ocean Vans — sophisticated premium offering. Significant price gap suggests strong premium differentiation.')
+    bullet(doc, 'Nomade — NEW ENTRANT. Highly differentiated (sustainable design, customisation, 1-month delivery) but low brand recognition.')
 
-    # ---------- 6. Simulator walkthrough ----------
-    h(doc, '5. Uso del simulador · How to use the simulator')
+    # ---------- 4. Tool features / simulator walkthrough ----------
+    doc.add_page_break()
+    h(doc, '3. Using the interactive simulator')
     para(doc, 'URL: ')
     p = doc.paragraphs[-1]; link = p.add_run(SIMULATOR_URL)
     link.font.color.rgb = BLUE; link.underline = True
 
+    para(doc,
+         'The simulator is a CLOSED LOOP. The Nomade price lives in one place and '
+         'every tab reads or writes the same number. You do not have to re-type the '
+         'same price in multiple tabs — pick one, iterate, and the Excel download '
+         'will reflect whatever you left on "Position & prices".',
+         italic=True, color=GREY)
+
     for s in [
-        'Pick a rental period (Day / Weekend / Week) and a version (Standard / Premium) at the top.',
-        'Go to Competition-based → Profit curve. DRAG the green "Our price" line. Coloured dashed lines are the three competitors; KPIs (profit, demand, revenue, lost-vs-peak) update live. Use Match-competitor / Snap-to-peak.',
-        'Go to Psychological factors — all inputs are pre-loaded from your current position. Experiment (Anchoring, Charm, Prospect Theory before/after price, Reference). Use Apply-to-Standard / Apply-to-Premium buttons to push a tested number back into Position & prices.',
-        'Open Position & prices to type numbers directly and add the analyst note.',
-        'Open Case answers — the three formal questions are there; write your answer in each box.',
-        'Open Download Excel. One click produces a .xlsx with 8 sheets including Case answers and all 9 charts embedded as images.',
+        'Pick period (Day / Weekend / Week) and version (Standard / Premium) at the top.',
+        'Competition-based → Profit curve: DRAG the green "Our price" line. Coloured dashed lines are competitors; KPIs (profit, demand, revenue, lost-vs-peak) update live. Use Match-competitor / Snap-to-peak quick-jump buttons.',
+        'Psychological factors: all inputs pre-loaded from your current position. Experiment with Anchoring, Charm pricing, Prospect Theory (before/after), Reference price. Use Apply-to-Standard / Apply-to-Premium to push tested numbers into the final position.',
+        'Position & prices: same interactive chart + numeric inputs for every period. Add the analyst note.',
+        'Case answers: the four formal questions (see section 4) — write your answer in each box.',
+        'Download Excel: single .xlsx with 8 sheets including Case answers and all 9 charts as images — this file IS the deliverable.',
     ]:
         numbered(doc, s)
 
+    # ---------- 5. Strategic framework ----------
     doc.add_page_break()
-
-    # ---------- 7. FORMAL QUESTIONS ----------
-    h(doc, '6. Preguntas del caso · Formal deliverable questions')
+    h(doc, '4. Strategic framework — the 4 scenarios')
     para(doc,
-         'These three questions reproduce the original Nomade v2.0 deliverables. '
-         'Write your answer either (a) inside the simulator\'s Case answers tab — '
-         'everything will be exported to the Excel download — or (b) directly in '
-         'the boxes below.', italic=True)
+         'The pricing decision depends on comparing the WTP optimal price (Popt) '
+         'with competitor prices (C) and on understanding whether the gap comes '
+         'from cost structure or from differentiation.')
+    tbl = doc.add_table(rows=9, cols=4); tbl.style = 'Light Grid Accent 1'
+    make_header_row(tbl, ['Scenario', 'Status', 'Reason', 'Strategy'])
+    for i, row in enumerate([
+        ('a.1','Popt > C','More differentiated',     'NO — illogical'),
+        ('a.2','Popt > C','Worse costs',             'YES (−) Penetration'),
+        ('a.3','Popt < C','Less differentiated',     'YES (−−) Aggressive penetration'),
+        ('a.4','Popt < C','Better costs',            'NO — great position'),
+        ('b.1','Popt > C','More differentiated',     'RISKY — only for Apple-like brands'),
+        ('b.2','Popt > C','Worse costs',             'NO — escape / reposition'),
+        ('b.3','Popt < C','Less differentiated',     'YES (+) Skimming'),
+        ('b.4','Popt < C','Better costs',            'NO — already right'),
+    ], 1):
+        for j, v in enumerate(row):
+            tbl.rows[i].cells[j].text = v
+    doc.add_paragraph()
+    para(doc, 'Nomade\'s strategic position (v3 baseline):', bold=True)
+    bullet(doc, 'Current status: Popt < C (€80 / €100 vs €85–€105 Std and €95–€129 Prem).')
+    bullet(doc, 'Cost structure: similar or slightly better (sustainable-design efficiency).')
+    bullet(doc, 'Differentiation: OBJECTIVELY HIGHER (sustainability 10/10, customisation 10/10).')
+    bullet(doc, 'BUT low brand recognition (NEW entrant — 3/10 vs 8–9/10).')
+    bullet(doc, 'This is SCENARIO b.3: Popt < C because customers perceive Nomade as less differentiated (the brand is unknown, not the product).')
+    bullet(doc, 'Recommendation: SKIMMING (+) — moderate price increase to build brand perception and leverage the anchor effect.')
+
+    # ---------- 6. FORMAL QUESTIONS (4 v3) ----------
+    doc.add_page_break()
+    h(doc, '5. Case questions')
+    para(doc,
+         'Four formal questions from Nomade v3.0. Write your answer either (a) '
+         'inside the simulator\'s Case answers tab — which is exported into the '
+         'Excel — or (b) directly in the answer boxes below.',
+         italic=True)
 
     # Q1
     p = doc.add_paragraph()
-    r = p.add_run('P1 — '); r.bold = True; r.font.color.rgb = ORANGE
-    r2 = p.add_run('With the indicated data, give assumptions of competitors\' cost '
-                    'structures and brand-value differentiation compared to NOMADE. '
-                    'Consider that NOMADE is new, and the others are well-established.')
-    r2.bold = True
-    para(doc, 'Simulator tasks:', bold=True)
-    bullet(doc, 'Read profit at each competitor\'s price on the Profit curve (dashed lines). Fill the table.')
-    tbl = doc.add_table(rows=4, cols=4)
-    tbl.style = 'Light Grid Accent 1'
-    for i, txt in enumerate(['Competitor', 'Their Std (€)', 'Our profit at their price (€)', 'Likely FC assumption']):
-        cell = tbl.rows[0].cells[i]; cell.text = txt
-        for r in cell.paragraphs[0].runs: r.bold = True
-    for i, name in enumerate(['Further VAN experience', 'People Camper', 'Ocean Vans'], 1):
-        tbl.rows[i].cells[0].text = name
-    doc.add_paragraph()
-    bullet(doc, 'Justify NOMADE\'s cost disadvantage (new, smaller scale) and brand-value upside (design, sustainability, customisation).')
+    r = p.add_run('P1 — Competitive analysis and positioning')
+    r.bold = True; r.font.color.rgb = ORANGE
+    para(doc, 'With the data provided and the tool:', bold=True)
+    bullet(doc, 'Give assumptions about the competitors\' cost structures and their brand-value differentiation.')
+    bullet(doc, 'Remember NOMADE is NEW while the others are well-established.')
+    bullet(doc, 'For each competitor, evaluate whether higher prices are due to: (a) higher operating costs, or (b) higher differentiation (brand recognition, quality, features).')
+    bullet(doc, 'Build a positioning map of Nomade vs. competitors on the key attributes.')
+    para(doc, 'Simulator tasks:', bold=True, color=GREY)
+    bullet(doc, 'Read profit at each competitor\'s dashed line on the Profit curve.')
+    bullet(doc, 'Fill the table of brand / cost assumptions per competitor (see section 2.4).')
     para(doc, 'Your answer:', bold=True)
-    answer_box(doc, lines=10)
+    answer_box(doc, lines=12)
 
     # Q2
     p = doc.add_paragraph()
-    r = p.add_run('P2 — '); r.bold = True; r.font.color.rgb = ORANGE
-    r2 = p.add_run('Suggest a competitive strategy for Nomade, indicating whether '
-                    'Nomade can improve its market position with a strategic view. '
-                    'Also consider possible psychological factors.')
-    r2.bold = True
-    para(doc, 'Simulator tasks:', bold=True)
-    bullet(doc, 'Drag the green line and use Match-competitor / Snap-to-peak. Take a screenshot.')
-    bullet(doc, 'On Psychological factors, experiment in this order:')
-    numbered(doc, 'Anchoring: design a Good-Better-Best sandwich. Apply the middle to Our Standard.')
-    numbered(doc, 'Charm pricing: test round vs charm. Does the +7 % perception uplift beat the margin cost of −€1? Apply if it does.')
-    numbered(doc, 'Prospect Theory: if you raise price by €10 next year, quantify the pain and draft one sentence to reframe it.')
-    numbered(doc, 'Reference price: cheapest competitor as reference. What share of respondents sit above?')
-    bullet(doc, 'Close with a <100-word positioning statement.')
+    r = p.add_run('P2 — Apply the 4-scenario strategic framework')
+    r.bold = True; r.font.color.rgb = ORANGE
+    para(doc, 'Using the 4-scenario framework (section 4):', bold=True)
+    bullet(doc, 'Identify which scenario applies to Nomade for each version (Standard / Premium).')
+    bullet(doc, 'Is Popt > or < competitors\' prices? Is the reason cost structure or differentiation?')
+    bullet(doc, 'Given the scenario, should Nomade pursue: (a) penetration (−) / aggressive penetration (−−), (b) skimming (+) / fast-aggressive (++), or (c) nothing?')
+    bullet(doc, 'Justify with competition theory and the WTP profit analysis.')
     para(doc, 'Your answer:', bold=True)
     answer_box(doc, lines=14)
 
     # Q3
     p = doc.add_paragraph()
-    r = p.add_run('P3 — '); r.bold = True; r.font.color.rgb = ORANGE
-    r2 = p.add_run('Suggest a pricing implementation strategy with the final list '
-                    'prices and elaborate on possible promotional actions.')
-    r2.bold = True
-    para(doc, 'Simulator tasks:', bold=True)
-    bullet(doc, 'Set final prices in Position & prices for each combination:')
-    tbl = doc.add_table(rows=3, cols=4)
-    tbl.style = 'Light Grid Accent 1'
-    for i, txt in enumerate(['', 'Day', 'Weekend (per day)', 'Week (per day)']):
-        cell = tbl.rows[0].cells[i]; cell.text = txt
-        for r in cell.paragraphs[0].runs: r.bold = True
-    tbl.rows[1].cells[0].text = 'Standard'
-    tbl.rows[2].cells[0].text = 'Premium'
-    doc.add_paragraph()
-    bullet(doc, 'Justify each number (peak, WTP %, nearest competitor, psychological lever).')
-    bullet(doc, 'Draft 2–3 promotions — target segment, price lever, expected pain/gain (Prospect Theory).')
-    bullet(doc, 'Add the analyst note in the simulator, click Download Excel, attach the file.')
+    r = p.add_run('P3 — Weekend / week pricing strategy')
+    r.bold = True; r.font.color.rgb = ORANGE
+    para(doc, 'Competitor data is DAILY only:', bold=True)
+    bullet(doc, 'Start from your daily pricing decisions (WTP optimum + competitive positioning).')
+    bullet(doc, 'Assume industry conventions: weekend ≈ 5–10 % per-day discount, week ≈ 20–30 % total discount.')
+    bullet(doc, 'Propose Nomade\'s weekend / week prices.')
+    bullet(doc, 'Use anchoring (daily × 7 vs weekly) and the "sandwich" between Standard and Premium.')
     para(doc, 'Your answer:', bold=True)
     answer_box(doc, lines=14)
 
-    # ---------- 8. Evaluation ----------
+    # Q4
+    p = doc.add_paragraph()
+    r = p.add_run('P4 — Complete pricing proposal')
+    r.bold = True; r.font.color.rgb = ORANGE
+    para(doc, 'Deliver the full pricing strategy with justification:', bold=True)
+    bullet(doc, 'Complete price table (Standard / Premium × Day / Weekend / Week).')
+    tbl = doc.add_table(rows=3, cols=4); tbl.style = 'Light Grid Accent 1'
+    make_header_row(tbl, ['', 'Day', 'Weekend (per day)', 'Week (per day)'])
+    tbl.rows[1].cells[0].text = 'Standard'
+    tbl.rows[2].cells[0].text = 'Premium'
+    doc.add_paragraph()
+    bullet(doc, 'Comparison vs competitors (with your weekend/week assumptions).')
+    bullet(doc, 'Justify with: (a) WTP analysis (profit curves), (b) competitive positioning (differentiation vs costs), (c) psychological tactics (anchoring, sandwich, charm).')
+    bullet(doc, 'Expected business outcomes (profit, market positioning).')
+    bullet(doc, 'Consider alternative structures (e.g., 3-tier with "enhanced" version).')
+    bullet(doc, 'Risk mitigation (competitor reactions).')
+    para(doc, 'Your answer:', bold=True)
+    answer_box(doc, lines=16)
+
+    # ---------- 7. Evaluation ----------
     doc.add_page_break()
-    h(doc, '7. Evaluation criteria')
+    h(doc, '6. Evaluation criteria')
     bullet(doc, 'Rigour — evidence inside the simulator (drag results, screenshots, numbers).')
     bullet(doc, 'Integration of competition + WTP + psychological factors into a single recommendation.')
+    bullet(doc, 'Correct use of the 4-scenario strategic framework.')
     bullet(doc, 'Clarity and brevity — numbers justified, trade-offs explicit.')
-    bullet(doc, 'Case answers written inside the simulator before the Excel is downloaded.')
 
     h(doc, 'Deliverable', level=2)
     para(doc,
          'The Excel (.xlsx) downloaded from the simulator is enough. Submit that file alone — '
-         'it already contains every piece of evidence required:',
-         bold=False)
+         'it already contains every piece of evidence required:')
     bullet(doc, 'Guide — case background, data note and active view.')
     bullet(doc, 'Questions — the 13 survey items (reference only).')
     bullet(doc, 'Answers — Day / Weekend / Week — aggregated WTP distributions.')
     bullet(doc, 'Position — your final prices, competitor prices, peak / gap / acceptance KPIs and the analyst note.')
-    bullet(doc, 'Case answers — your written answers to the three formal questions.')
+    bullet(doc, 'Case answers — your written answers to the four formal questions.')
     bullet(doc, 'Charts — the nine simulator charts embedded as images.')
     para(doc,
-         'Before downloading, make sure you have filled the three Case answers and set the final '
-         'prices in Position & prices. No additional Word or PowerPoint file is required.',
+         'Before downloading, make sure you have filled the four Case answers and set the '
+         'final prices in Position & prices. No additional Word or PowerPoint file is required.',
          italic=True, color=GREY)
 
     # ---------- APPENDIX ----------
@@ -345,9 +397,9 @@ def build():
         p2 = doc.add_paragraph()
         r2 = p2.add_run(spanish); r2.italic = True; r2.font.color.rgb = GREY; r2.font.size = Pt(10)
 
-    from datetime import datetime
+    # ---------- Save ----------
     stamp = datetime.now().strftime('%Y-%m-%d')
-    out = f'Nomade_Vans_Case_v3.1_Simulator_Edition_{stamp}.docx'
+    out = f'Nomade_Vans_Case_v3.0_Simulator_Edition_{stamp}.docx'
     doc.save(out)
     print('Saved:', out)
 
