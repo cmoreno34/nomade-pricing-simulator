@@ -112,8 +112,44 @@ def build():
 
     doc.add_page_break()
 
-    # ---------- 1. Company summary ----------
-    h(doc, '1. Company summary')
+    # ---------- 1. The story ----------
+    h(doc, '1. The case — Nomade Vans')
+    para(doc,
+         "Nomade Vans is a Spanish company focused on the design and "
+         "\"camperization\" of sustainable vans. Customers configure their "
+         "vehicle through the company website and the firm commits to a "
+         "one-month delivery. Unlike most players in the category, Nomade "
+         "uses a unique design aligned with sustainability values and the "
+         "natural environment.")
+    para(doc,
+         "After two seasons designing and camperizing vans for direct sale, "
+         "the founders are now considering a new line of business: "
+         "renting camperized vans. To launch it, the company has defined "
+         "two service tiers, three rental periods and a survey-based "
+         "willingness-to-pay analysis.")
+
+    para(doc, 'Two service tiers:', bold=True)
+    bullet(doc, 'Standard Camper Rental — base conversion with proven kitchen + bed package.')
+    bullet(doc, 'Premium Camper Rental — hybrid model, extra bed, indoor shower, air conditioning, solar power, extra kitchenware.')
+
+    para(doc, 'Three rental periods:', bold=True)
+    bullet(doc, 'Day — single-day rental.')
+    bullet(doc, 'Weekend — 2 nights.')
+    bullet(doc, 'Week — 6 nights.')
+    para(doc,
+         'The combination of tiers × periods defines a 2 × 3 price structure.',
+         italic=True, color=GREY)
+
+    para(doc,
+         "To calibrate willingness-to-pay, Nomade surveyed 95 people, asking "
+         "about demographics, travel habits and the maximum price they would "
+         "be willing to pay in each of the six rental scenarios. The marketing "
+         "department also identified three competitors in the relevant market — "
+         "Further VAN, People Camper and Ocean Vans — currently publishing "
+         "daily tariffs only.")
+
+    # ---------- 2. Company summary ----------
+    h(doc, '2. Company summary — Nomade vs. market')
     para(doc,
          "Nomade Vans is a NEW entrant in the campervan rental market, specialised "
          "in sustainable and highly customisable van designs with fast delivery "
@@ -143,10 +179,10 @@ def build():
              title='⚠ Data note — incomplete dataset (v3.0)')
 
     # ---------- 3. Data available ----------
-    h(doc, '2. Data available')
+    h(doc, '3. Data available')
 
-    # 2.1 Standard survey
-    h(doc, '2.1 Survey — Standard camper (WTP)', level=2)
+    # 3.1 Standard survey
+    h(doc, '3.1 Survey — Standard camper (WTP)', level=2)
     for lbl, prices, resps in [
         ('Daily rentals',            [50,60,70,80,90,100,110,120,130],  [17,14,10,16,12,19,2,4,1]),
         ('Weekend (2-night) rentals',[80,100,120,140,160,180,200],      [12,7,18,13,11,15,11]),
@@ -161,8 +197,8 @@ def build():
             tbl.rows[1].cells[i].text = str(resps[i-1])
         doc.add_paragraph()
 
-    # 2.2 Premium survey
-    h(doc, '2.2 Survey — Premium camper (WTP)', level=2)
+    # 3.2 Premium survey
+    h(doc, '3.2 Survey — Premium camper (WTP)', level=2)
     for lbl, prices, resps in [
         ('Daily rentals',            [60,70,80,90,100,110,120,130,140,150,160,180,200], [10,5,12,8,14,12,19,5,3,4,1,1,1]),
         ('Weekend (2-night) rentals',[120,140,160,180,200,220,240,260,280],              [10,6,13,8,22,2,18,4,2]),
@@ -177,8 +213,8 @@ def build():
             tbl.rows[1].cells[i].text = str(resps[i-1])
         doc.add_paragraph()
 
-    # 2.3 Cost structure
-    h(doc, '2.3 Cost structure', level=2)
+    # 3.3 Cost structure
+    h(doc, '3.3 Cost structure', level=2)
     tbl = doc.add_table(rows=4, cols=4); tbl.style = 'Light Grid Accent 1'
     make_header_row(tbl, ['Item', 'Daily', 'Weekend', 'Weekly'])
     for i, row in enumerate([
@@ -190,8 +226,8 @@ def build():
             tbl.rows[i].cells[j].text = v
     doc.add_paragraph()
 
-    # 2.4 Competitors (with attributes)
-    h(doc, '2.4 Competitor data (daily tariffs only)', level=2)
+    # 3.4 Competitors (with attributes)
+    h(doc, '3.4 Competitor data (daily tariffs only)', level=2)
     tbl = doc.add_table(rows=5, cols=7); tbl.style = 'Light Grid Accent 1'
     make_header_row(tbl, ['Competitor','Std (€/d)','Prem (€/d)','Gap (€)','Establishment 0–10','Brand 0–10','Sustainability 0–10'])
     for i, row in enumerate([
@@ -211,7 +247,7 @@ def build():
 
     # ---------- 4. Tool features / simulator walkthrough ----------
     doc.add_page_break()
-    h(doc, '3. Using the interactive simulator')
+    h(doc, '4. Using the interactive simulator')
     para(doc, 'URL: ')
     p = doc.paragraphs[-1]; link = p.add_run(SIMULATOR_URL)
     link.font.color.rgb = BLUE; link.underline = True
@@ -235,7 +271,7 @@ def build():
 
     # ---------- 5. Strategic framework ----------
     doc.add_page_break()
-    h(doc, '4. Strategic framework — the 4 scenarios')
+    h(doc, '5. Strategic framework — the 4 scenarios')
     para(doc,
          'The pricing decision depends on comparing the WTP optimal price (Popt) '
          'with competitor prices (C) and on understanding whether the gap comes '
@@ -265,7 +301,7 @@ def build():
 
     # ---------- 6. FORMAL QUESTIONS (4 v3) ----------
     doc.add_page_break()
-    h(doc, '5. Case questions')
+    h(doc, '6. Case questions')
     para(doc,
          'Four formal questions from Nomade v3.0. Write your answer either (a) '
          'inside the simulator\'s Case answers tab — which is exported into the '
@@ -332,7 +368,7 @@ def build():
 
     # ---------- 7. Evaluation ----------
     doc.add_page_break()
-    h(doc, '6. Evaluation criteria')
+    h(doc, '7. Evaluation criteria')
     bullet(doc, 'Rigour — evidence inside the simulator (drag results, screenshots, numbers).')
     bullet(doc, 'Integration of competition + WTP + psychological factors into a single recommendation.')
     bullet(doc, 'Correct use of the 4-scenario strategic framework.')
