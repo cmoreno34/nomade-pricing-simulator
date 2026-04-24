@@ -110,9 +110,21 @@
 const { useState, useMemo, useEffect, useRef } = React;
 const {
   LineChart, Line, BarChart, Bar, ComposedChart, Area,
-  XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
-  Cell, ReferenceLine
+  XAxis, YAxis, ZAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
+  Cell, ReferenceLine, ScatterChart, Scatter, LabelList
 } = Recharts;
+
+/* Player profiles — attribute scores 0-10 used in the positioning maps.
+   Sizes are small-to-medium for all four players (Spanish van-rental niche):
+   similar employee count, similar fleet size. The competitive set is NOT
+   David-vs-Goliath — it is a peer set where brand recognition is the main
+   driver of the price-gap students must explain. */
+const PROFILES = {
+  nomade:       { name: 'Nomade',        brand: 3, est: 2, sustain:10, design: 9, size: 'small (< 30 vans)',       color: '#f97316' },
+  furtherVAN:   { name: 'Further VAN',   brand: 8, est: 8, sustain: 5, design: 7, size: 'small-medium (~ 50 vans)', color: '#3b82f6' },
+  peopleCamper: { name: 'People Camper', brand: 9, est: 9, sustain: 4, design: 6, size: 'small-medium (~ 60 vans)', color: '#8b5cf6' },
+  oceanVans:    { name: 'Ocean Vans',    brand: 9, est: 9, sustain: 6, design: 7, size: 'small-medium (~ 55 vans)', color: '#10b981' }
+};
 
 /* ============================================================
    DATA
@@ -513,6 +525,43 @@ function App() {
     </ResponsiveContainer>
   );
 
+  /* ======================================================================
+     Positioning maps — Price vs perceived attribute (Brand / Sustainability / Design)
+     ====================================================================== */
+  const positioningData = (attr) => [
+    { name: PROFILES.nomade.name,       x: PROFILES.nomade[attr],       y: ourPrices.day.standard,         color: PROFILES.nomade.color,       isUs: true,  size: PROFILES.nomade.size },
+    { name: PROFILES.furtherVAN.name,   x: PROFILES.furtherVAN[attr],   y: competitorPrice('day','furtherVAN'),   color: PROFILES.furtherVAN.color,   isUs: false, size: PROFILES.furtherVAN.size },
+    { name: PROFILES.peopleCamper.name, x: PROFILES.peopleCamper[attr], y: competitorPrice('day','peopleCamper'), color: PROFILES.peopleCamper.color, isUs: false, size: PROFILES.peopleCamper.size },
+    { name: PROFILES.oceanVans.name,    x: PROFILES.oceanVans[attr],    y: competitorPrice('day','oceanVans'),    color: PROFILES.oceanVans.color,    isUs: false, size: PROFILES.oceanVans.size }
+  ];
+
+  const PositioningMap = ({ attrKey, attrLabel, h=360, w="100%", children }) => {
+    const data = positioningData(attrKey);
+    return (
+      <ResponsiveContainer width={w} height={h}>
+        <ScatterChart margin={{top:20, right:30, bottom:50, left:10}}>
+          <CartesianGrid strokeDasharray="3 3" />
+          <XAxis type="number" dataKey="x" name={attrLabel} domain={[0,10]}
+                 label={{ value: attrLabel + ' (0–10)', position:'insideBottom', offset:-10, fontSize:12 }} />
+          <YAxis type="number" dataKey="y" name="Price (€)"
+                 label={{ value:'Daily price (€)', angle:-90, position:'insideLeft', fontSize:12 }} />
+          <Tooltip cursor={{strokeDasharray:'3 3'}}
+                   formatter={(v,n) => n==='Price (€)' ? `€${v}` : `${v}/10`}
+                   labelFormatter={() => ''} />
+          <Scatter data={data} shape="circle">
+            {data.map((d,i) => <Cell key={i} fill={d.color} />)}
+            <LabelList dataKey="name" position="right" style={{fontSize:11, fontWeight:600}} />
+          </Scatter>
+          {children}
+        </ScatterChart>
+      </ResponsiveContainer>
+    );
+  };
+
+  const PositioningBrandChart   = (p) => <PositioningMap {...p} attrKey="brand"   attrLabel="Brand recognition" />;
+  const PositioningSustainChart = (p) => <PositioningMap {...p} attrKey="sustain" attrLabel="Sustainability" />;
+  const PositioningDesignChart  = (p) => <PositioningMap {...p} attrKey="design"  attrLabel="Design / customisation" />;
+
   /* Combined positioning chart — Std + Prem × Day / Weekend / Week in ONE chart,
      with the competitors' single tariff shown as reference lines for the active period. */
   const CombinedPositioningChart = ({h=380, w="100%"}) => {
@@ -656,6 +705,9 @@ function App() {
     { k:'demand',      label:'Demand + Revenue',        C: DemandChart,            group:'overview' },
     { k:'competitive', label:'Competitive positioning', C: CompetitiveChart,       group:'overview' },
     { k:'combined',    label:'Std+Prem × Day/Weekend/Week + competitors', C: CombinedPositioningChart, group:'overview' },
+    { k:'posBrand',    label:'Positioning map — Price × Brand recognition', C: PositioningBrandChart,   group:'overview' },
+    { k:'posSust',     label:'Positioning map — Price × Sustainability',    C: PositioningSustainChart, group:'overview' },
+    { k:'posDesign',   label:'Positioning map — Price × Design',            C: PositioningDesignChart,  group:'overview' },
     { k:'gap',         label:'Gap vs competitors',      C: GapChart,               group:'overview' },
     { k:'anchor',      label:'Anchoring / Sandwich',    C: AnchorChart,      group:'psych' },
     { k:'charm',       label:'Charm pricing (digit 9)', C: CharmChart,       group:'psych' },
@@ -983,6 +1035,28 @@ function App() {
             tariffs. The commercial team must now decide, for each period × version: <em>how much to charge, where
             to sit versus the competition and how to frame the number</em> (psychological factors).
           </p>
+
+          <div className="explain">
+            <strong>Size parity — this is a peer set, not a David-vs-Goliath fight.</strong> The four players
+            are similar-sized operators in the Spanish sustainable-camper niche. Approximate fleet size:
+            Nomade {PROFILES.nomade.size}, Further VAN {PROFILES.furtherVAN.size},
+            People Camper {PROFILES.peopleCamper.size}, Ocean Vans {PROFILES.oceanVans.size}. None of them is
+            a multinational chain. That matters because <strong>the cost-structure advantage of the incumbents is limited</strong> —
+            their price premium comes mostly from <strong>brand recognition</strong> and the fact that they were in the market first,
+            not from radically lower unit costs. This is why Nomade can close the gap relatively quickly by
+            building brand perception on its stronger attributes (sustainability, customisation).
+          </div>
+
+          <div className="explain purple">
+            <strong>Why Nomade charges less (even though it is objectively more differentiated).</strong> The
+            positioning maps below — tick <em>"Positioning map — Price × Brand recognition"</em>,
+            <em> "… × Sustainability"</em> and <em>"… × Design"</em> on the Competition-based tab — show this
+            visually. On the Brand-recognition map Nomade sits in the bottom-left (low brand, low price), while
+            the competitors sit in the top-right. On the Sustainability and Design maps the picture flips:
+            Nomade is in the top-right (best score) but still at a lower price. That contradiction is the
+            pricing opportunity: build brand perception to move up the price axis without losing the
+            differentiation story.
+          </div>
           <p className="note" style={{marginTop:6}}>Everything below — WTP data, competitor prices, cost
             structure, psychological-factor framework — is preloaded in the tabs above so you can run the decision
             end-to-end and download the result.</p>

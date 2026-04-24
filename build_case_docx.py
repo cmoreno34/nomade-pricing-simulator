@@ -148,6 +148,19 @@ def build():
          "Further VAN, People Camper and Ocean Vans — currently publishing "
          "daily tariffs only.")
 
+    note_box(doc,
+             "All four players are SIMILAR-SIZED operators in the Spanish "
+             "sustainable-camper niche. Approximate fleet size: Nomade < 30 vans, "
+             "Further VAN ~ 50, People Camper ~ 60, Ocean Vans ~ 55. This is a "
+             "PEER SET, not a David-vs-Goliath fight. The implication matters: "
+             "the cost-structure advantage of the incumbents is LIMITED — their "
+             "price premium is mostly driven by BRAND RECOGNITION and first-mover "
+             "status, not by radically lower unit costs. Nomade can therefore "
+             "close the gap by building brand perception on its stronger "
+             "attributes (sustainability, customisation, design).",
+             title='Size parity — the competitive set',
+             fill='F5F3FF', title_color=RGBColor(0x5B, 0x21, 0xB6))
+
     # ---------- 2. Company summary ----------
     h(doc, '2. Company summary — Nomade vs. market')
     para(doc,
@@ -259,19 +272,45 @@ def build():
     h(doc, '3.5 Positioning maps — price vs. perceived attribute', level=2)
     para(doc,
          'A positioning map plots each player on two axes: price (Y) and a key '
-         'perceived attribute (X — brand recognition, sustainability, comfort, etc.). '
-         'It is the most direct visual way to see where the white space of the market '
-         'is and where the closest competitor actually sits.')
-    para(doc, 'In this case you can draw three useful maps:', bold=True)
-    bullet(doc, 'Price × Brand recognition — shows that Nomade sits LOW on brand but can still take a middle-price position by leveraging the sustainability axis.')
-    bullet(doc, 'Price × Sustainability — the axis where Nomade scores 10/10. The map makes the differentiation obvious and justifies a skimming-style move on Premium.')
-    bullet(doc, 'Price × Versatility (number of tariffs / tiers) — Nomade is ALONE with 2 tiers and 3 periods. The others are single-tier + daily-only. The asymmetry is itself a positioning lever (anchoring sandwich, flexible bundles).')
+         'perceived attribute (X). It is the most direct visual way to see where '
+         'the market\'s white space is, where the closest competitor really sits, '
+         'and why Nomade ends up charging less despite being objectively more '
+         'differentiated.')
+
+    para(doc, 'The four players\' coordinates (used by the simulator):', bold=True)
+    tbl = doc.add_table(rows=5, cols=6); tbl.style = 'Light Grid Accent 1'
+    make_header_row(tbl, ['Player','Daily price (€)','Brand 0–10','Sustainability 0–10','Design 0–10','Fleet size'])
+    for i, row in enumerate([
+        ('Nomade',        '80',  '3', '10', '9', '< 30 vans'),
+        ('Further VAN',   '85',  '8', '5',  '7', '~ 50 vans'),
+        ('People Camper', '105', '9', '4',  '6', '~ 60 vans'),
+        ('Ocean Vans',    '98',  '9', '6',  '7', '~ 55 vans'),
+    ], 1):
+        for j, v in enumerate(row):
+            tbl.rows[i].cells[j].text = v
+    doc.add_paragraph()
+
+    para(doc, 'Three useful maps — tick them on Competition-based → Graph picker:', bold=True)
+    bullet(doc, 'Price × Brand recognition — Nomade is bottom-left (low brand, low price); competitors are top-right (high brand, high price). The price gap mirrors the brand gap almost perfectly.')
+    bullet(doc, 'Price × Sustainability — the picture flips: Nomade is top-right (best score, 10/10) yet the LEAST expensive. The competitors sit bottom-left, with People Camper the weakest on sustainability (4/10). This map alone justifies a skimming move on Premium.')
+    bullet(doc, 'Price × Design / customisation — Nomade is mid-top (9/10 on design, €80 price). Competitors cluster mid-price / mid-design. This shows that the pricing gap is NOT explained by product inferiority.')
+
+    note_box(doc,
+             'The three maps together tell the story: Nomade\'s lower price is NOT '
+             'explained by inferior product or by a structural cost disadvantage '
+             '(sizes are similar). It is explained almost entirely by the BRAND '
+             'RECOGNITION gap. The strategic implication is therefore clear — '
+             'invest in brand perception (narrative, channels, reviews, endorsements) '
+             'to move UP the price axis without having to touch the product.',
+             title='Why Nomade charges less — and what to do about it',
+             fill='F5F3FF', title_color=RGBColor(0x5B, 0x21, 0xB6))
+
     para(doc,
-         'The simulator renders these ideas in a single chart titled '
-         '"Std+Prem × Day/Weekend/Week + competitors" — tick it on the '
-         'Competition-based tab. The two Nomade bars (blue/orange) sit next to the '
-         'three competitor bars (pale blue / purple / green), so the sandwich vs '
-         'single-tariff picture appears in one glance.',
+         'A fourth axis — versatility (number of tariffs / tiers) — is where Nomade '
+         'is ALONE: two tiers and three periods vs the competitors\' single-tier, '
+         'daily-only offer. That asymmetry is itself a positioning lever '
+         '(anchoring sandwich, flexible bundles) and is rendered in the simulator '
+         'under the "Std+Prem × Day/Weekend/Week + competitors" chart.',
          italic=True, color=GREY)
 
     # ---------- 4. Tool features / simulator walkthrough ----------
