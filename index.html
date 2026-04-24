@@ -110,7 +110,7 @@
 const { useState, useMemo, useEffect, useRef } = React;
 const {
   LineChart, Line, BarChart, Bar, ComposedChart, Area,
-  XAxis, YAxis, ZAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
+  XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
   Cell, ReferenceLine, ScatterChart, Scatter, LabelList
 } = Recharts;
 
@@ -1054,14 +1054,34 @@ function App() {
           </div>
 
           <div className="explain purple">
-            <strong>Why Nomade charges less (even though it is objectively more differentiated).</strong> The
-            positioning maps below — tick <em>"Positioning map — Price × Brand recognition"</em>,
-            <em> "… × Sustainability"</em> and <em>"… × Design"</em> on the Competition-based tab — show this
-            visually. On the Brand-recognition map Nomade sits in the bottom-left (low brand, low price), while
-            the competitors sit in the top-right. On the Sustainability and Design maps the picture flips:
-            Nomade is in the top-right (best score) but still at a lower price. That contradiction is the
-            pricing opportunity: build brand perception to move up the price axis without losing the
-            differentiation story.
+            <strong>Why Nomade charges less (even though it is objectively more differentiated).</strong> Each
+            map below plots the <strong>daily price (Y)</strong> against one perceived attribute (X). The same
+            four players appear as coloured dots — <span style={{color:PROFILES.nomade.color,fontWeight:700}}>Nomade</span>,
+            <span style={{color:PROFILES.furtherVAN.color,fontWeight:700}}> Further VAN</span>,
+            <span style={{color:PROFILES.peopleCamper.color,fontWeight:700}}> People Camper</span>,
+            <span style={{color:PROFILES.oceanVans.color,fontWeight:700}}> Ocean Vans</span>. On the
+            Brand-recognition map Nomade sits in the bottom-left (low brand, low price); on the Sustainability
+            and Design maps the picture flips — Nomade top-right (best score) yet still cheapest. That
+            contradiction is the pricing opportunity: <em>build brand perception to move up the price axis
+            without losing the differentiation story</em>.
+          </div>
+
+          <div className="grid-3" style={{marginTop:12}}>
+            <div className="box-soft">
+              <h3 style={{color:'#5b21b6', marginBottom:6}}>Price × Brand recognition</h3>
+              <PositioningBrandChart h={240} />
+              <p className="hint">Nomade bottom-left. Price gap ≈ brand gap.</p>
+            </div>
+            <div className="box-soft">
+              <h3 style={{color:'#5b21b6', marginBottom:6}}>Price × Sustainability</h3>
+              <PositioningSustainChart h={240} />
+              <p className="hint">Nomade top-right. Picture flips.</p>
+            </div>
+            <div className="box-soft">
+              <h3 style={{color:'#5b21b6', marginBottom:6}}>Price × Design</h3>
+              <PositioningDesignChart h={240} />
+              <p className="hint">Nomade 9/10 at €80. Not a product-quality gap.</p>
+            </div>
           </div>
           <p className="note" style={{marginTop:6}}>Everything below — WTP data, competitor prices, cost
             structure, psychological-factor framework — is preloaded in the tabs above so you can run the decision
