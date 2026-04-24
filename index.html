@@ -160,11 +160,20 @@ const SURVEY = {
   }
 };
 
+/* Competitors offer ONE tier only (no Std/Prem split) and publish DAILY tariffs only.
+   Weekend / Week values below are theoretical daily-equivalents projected from the
+   daily tariff (weekend ≈ −5 % · week ≈ −30 %). They are shown in the simulator as
+   reference points, not as observed data. Structure keeps a "price" per (period, competitor). */
 const COMPETITORS_DEFAULT = {
-  day:     { furtherVAN: { standard: 85, premium: 95 }, peopleCamper: { standard: 105, premium: 115 }, oceanVans: { standard: 98, premium: 129 } },
-  weekend: { furtherVAN: { standard: 80, premium: 90 }, peopleCamper: { standard: 100, premium: 110 }, oceanVans: { standard: 93, premium: 123 } },
-  week:    { furtherVAN: { standard: 60, premium: 70 }, peopleCamper: { standard: 75,  premium: 85  }, oceanVans: { standard: 68, premium: 95  } }
+  day:     { furtherVAN: { price: 85 }, peopleCamper: { price: 105 }, oceanVans: { price: 98 } },
+  weekend: { furtherVAN: { price: 80 }, peopleCamper: { price: 100 }, oceanVans: { price: 93 } },
+  week:    { furtherVAN: { price: 60 }, peopleCamper: { price: 75  }, oceanVans: { price: 68 } }
 };
+/* Compatibility shim — older code paths read .standard / .premium. Both map to the
+   same single tariff. */
+const compPrice = (obj) => (obj && typeof obj === 'object')
+  ? (obj.price !== undefined ? obj.price : (obj.standard !== undefined ? obj.standard : 0))
+  : (obj || 0);
 
 const OUR_DEFAULT = {
   day:     { standard: 80, premium: 100 },
@@ -318,22 +327,22 @@ function App() {
     { id: 'Q1',
       title: 'Competitive analysis & positioning',
       prompt: 'With the data provided and the tool: (a) give assumptions about the competitors\' cost structures and their brand-value differentiation; (b) remember NOMADE is NEW while the others are well-established; (c) for each competitor, evaluate whether their higher price is driven by (i) higher operating costs, or (ii) higher differentiation (brand recognition, quality, features); (d) build a positioning map of Nomade vs. competitors on the key attributes.',
-      hint: 'Open Competition-based → Profit curve. Read profit at each competitor\'s dashed line. Nomade profile in the case: Establishment 2/10, Brand recognition 3/10, Sustainability 10/10. Competitor profile: Further VAN (8/8/5), People Camper (9/9/4), Ocean Vans (9/9/6).'
+      hint: 'ANSWER GUIDE — (a) Competitors are well-established → amortised fleet, procurement scale, branded channels ⇒ LOWER variable cost per rental but HIGHER fixed marketing & brand costs. Nomade is new → SIMILAR variable cost (sustainable-design efficiency compensates scale), HIGHER fixed cost per unit (thin fleet). (b) Their price premium is driven mostly by BRAND RECOGNITION — not by superior features. (c) Positioning map scores to use: Nomade (Establishment 2/10, Brand 3/10, Sustainability 10/10, Design 9/10), Further VAN (8/8/5/7), People Camper (9/9/4/6), Ocean Vans (9/9/6/7). Conclusion: Nomade is OBJECTIVELY MORE DIFFERENTIATED but PERCEIVED AS LESS so (weak brand). Use the "Std+Prem × Day/Weekend/Week" combined chart to visualise the gap.'
     },
     { id: 'Q2',
       title: 'Apply the 4-scenario strategic framework',
       prompt: 'Using the 4-scenario framework of the technical note: (a) identify which scenario applies to Nomade for each version (Standard / Premium); (b) is Popt > or < the competitors\' prices? (c) is the reason cost structure or differentiation? (d) given the scenario should Nomade pursue penetration (−) / aggressive penetration (−−), skimming (+) / fast-aggressive skimming (++), or do nothing? (e) justify with competition theory and the WTP profit analysis.',
-      hint: 'Popt for Nomade (v3 baseline): Std €80, Prem €100. Competitor range Std €85–€105, Prem €95–€129 → Popt < C. Cost structure similar/slightly better (sustainable-design efficiency). Differentiation HIGHER but BRAND low. Scenario b.3 applies (Popt < C because perceived as less differentiated despite objectively superior features). Recommendation: SKIMMING (+) — moderate price increase to build brand anchor.'
+      hint: 'ANSWER GUIDE — WTP optima: Std €80 · Prem €100. Competitor range Std €85–€105, Prem (assumed) €95–€129 → Popt < C. Cost structure similar (slightly better thanks to sustainable-design efficiency); differentiation OBJECTIVELY HIGHER but BRAND RECOGNITION LOW. This is scenario b.3: Popt < C because perceived as less differentiated despite real superiority. RECOMMENDATION → SKIMMING (+) for Premium (build brand anchor) and gentle PENETRATION (−) on Standard only in the first year to seed trial. Never aggressive penetration (−−) — it burns margin without fixing the brand gap. Use the Profit-curve tab to read the profit at +€5/+€10 moves before deciding.'
     },
     { id: 'Q3',
       title: 'Weekend / week pricing strategy',
       prompt: 'Competitor data is DAILY only. (a) Start with daily pricing decisions (WTP optimum + competitive positioning); (b) assume industry standards for weekend (5–10 % per-day discount) and week (20–30 % total discount) to estimate competitor tariffs; (c) propose Nomade\'s weekend / week prices; (d) use anchoring (daily × 7 vs weekly price); (e) build a "sandwich" between Standard and Premium.',
-      hint: 'On the Position & prices tab, switch between Day, Weekend and Week. Compare our per-day price to the "daily × 7" anchor. On Psychological factors → Anchoring, the default basic / mid / premium is already based on your current position — tweak the middle to be the target, then click Apply-to-position.'
+      hint: 'ANSWER GUIDE — Use weekend = −5 % per day (industry norm for 2-night packages) and week = −30 % per day (long-stay discount). Nomade weekend Std → €75/day (€150 total), Prem → €95/day; week Std → €60/day (€360 total), Prem → €77/day. Anchor the "week price" by showing the per-day saving vs the "7 × daily" reference inside the simulator. Use Psychological factors → Anchoring: leave Basic = cheapest competitor, Middle = Nomade Std, Premium = Nomade Prem and apply to position. The "Std+Prem × Day/Weekend/Week" combined chart makes the 2 × 3 sandwich visible in one picture.'
     },
     { id: 'Q4',
       title: 'Complete pricing proposal',
       prompt: 'Deliver the final pricing strategy with full justification: (a) complete price table (Standard/Premium × Day/Weekend/Week); (b) comparison vs competitors (using your weekend/week assumptions); (c) justification — WTP analysis (profit curves), competitive positioning (differentiation vs costs), psychological tactics (anchoring, sandwich, charm); (d) expected business outcomes (profit, market positioning); (e) consider alternative structures (e.g., 3-tier with "enhanced" version); (f) risk mitigation (competitor reactions).',
-      hint: 'Set every final price in Position & prices. The Excel download already carries: your prices, competitor prices, peak profit, acceptance %, gap vs average, psychological parameters, charts and your Case answers. This sheet IS the proposal.'
+      hint: 'ANSWER GUIDE — Baseline proposal: Std (Day €79 / Weekend €75/day / Week €60/day), Prem (Day €99 / Weekend €95/day / Week €77/day). Charm endings €79 / €99 capture the digit-9 effect without eroding margin. Outcomes: ≈ 65 % acceptance on Std, 40–50 % on Prem, −€5–€10 gap vs avg competitor, total profit > €80 k/yr combined. Risks: (i) competitors undercut daily Std → pre-commit to price lock for 6 months + loyalty week-at-day-price; (ii) brand-recognition handicap → push sustainability narrative; (iii) cannibalisation → keep Std–Prem gap ≥ 20 €. Fill every price on Position & prices, add the analyst note, download the Excel. That file IS the proposal.'
     }
   ];
 
@@ -348,15 +357,21 @@ function App() {
   const peakPrem  = useMemo(()=>findPeak(curvePrem), [curvePrem]);
   const curCurve  = version === 'standard' ? curveStd  : curvePrem;
 
-  const updateCompetitor = (comp, ver, val) =>
-    setCompetitors(prev => ({ ...prev, [period]: { ...prev[period], [comp]: { ...prev[period][comp], [ver]: parseFloat(val)||0 } } }));
+  /* Competitors have ONE price; both ver fields update the same field */
+  const updateCompetitor = (comp, _ver, val) =>
+    setCompetitors(prev => ({ ...prev, [period]: { ...prev[period], [comp]: { price: parseFloat(val)||0 } } }));
+  const competitorPrice = (p, cKey) => compPrice(competitors[p][cKey]);
 
+  /* For the competitive chart, competitors appear ONCE (single tariff), Nomade appears with its two tiers. */
   const compData = [
-    { name: 'Nomade Vans', standard: ourPrices[period].standard, premium: ourPrices[period].premium, color: '#f97316', isUs: true },
-    ...COMP_META.map(c => ({ name: c.name, standard: competitors[period][c.k].standard, premium: competitors[period][c.k].premium, color: c.color, isUs: false }))
+    { name: 'Nomade Std',   price: ourPrices[period].standard, color: '#2563eb', isUs: true,  tier: 'Standard' },
+    { name: 'Nomade Prem',  price: ourPrices[period].premium,  color: '#f97316', isUs: true,  tier: 'Premium'  },
+    ...COMP_META.map(c => ({ name: c.name, price: competitorPrice(period, c.k), color: c.color, isUs: false, tier: 'Single tariff' }))
   ];
-  const avgCompStd  = COMP_META.reduce((s,c)=>s+competitors[period][c.k].standard,0) / COMP_META.length;
-  const avgCompPrem = COMP_META.reduce((s,c)=>s+competitors[period][c.k].premium,0) / COMP_META.length;
+  /* Average of competitors' single tariff — used for the "gap vs average" KPI */
+  const avgComp     = COMP_META.reduce((s,c) => s + competitorPrice(period, c.k), 0) / COMP_META.length;
+  const avgCompStd  = avgComp;
+  const avgCompPrem = avgComp;
   const gapStd  = ourPrices[period].standard - avgCompStd;
   const gapPrem = ourPrices[period].premium  - avgCompPrem;
   const pctAcceptStd  = pctAccepting(SURVEY[period].standard, ourPrices[period].standard);
@@ -367,7 +382,7 @@ function App() {
   useEffect(() => {
     const ourStd  = ourPrices[period].standard;
     const ourPrem = ourPrices[period].premium;
-    const compStdMin = Math.min(...COMP_META.map(c => competitors[period][c.k].standard));
+    const compStdMin = Math.min(...COMP_META.map(c => competitorPrice(period, c.k)));
     setAnchorTier({ basic: compStdMin, mid: ourStd, premium: ourPrem });
     const rounded = ourStd;
     setCharmTest({ round: rounded, charm: rounded > 10 ? rounded - 1 : rounded });
@@ -455,7 +470,7 @@ function App() {
           <ReferenceLine x={peakStd.price}  stroke="#3b82f6" strokeDasharray="5 5" label={{ value:`Std opt €${peakStd.price}`,  position:'top', fill:'#3b82f6' }}/>
           <ReferenceLine x={peakPrem.price} stroke="#f97316" strokeDasharray="5 5" label={{ value:`Prem opt €${peakPrem.price}`, position:'top', fill:'#f97316' }}/>
           {COMP_META.map(c => (
-            <ReferenceLine key={c.k} x={competitors[period][c.k][version]} stroke={c.color} strokeDasharray="3 3"
+            <ReferenceLine key={c.k} x={competitorPrice(period, c.k)} stroke={c.color} strokeDasharray="3 3"
               label={{ value: c.name, fill: c.color, position: 'insideTop', fontSize: 11 }} />
           ))}
           <ReferenceLine x={ourPrices[period][version]} stroke="#059669" strokeWidth={3}
@@ -481,26 +496,58 @@ function App() {
     </ResponsiveContainer>
   );
 
-  const CompetitiveChart = ({h=340, w="100%"}) => (
+  const CompetitiveChart = ({h=360, w="100%"}) => (
     <ResponsiveContainer width={w} height={h}>
-      <BarChart data={compData}>
+      <BarChart data={compData} margin={{top:20, right:30, left:0, bottom:60}}>
         <CartesianGrid strokeDasharray="3 3" />
-        <XAxis dataKey="name" angle={-12} textAnchor="end" height={70} />
+        <XAxis dataKey="name" angle={-14} textAnchor="end" height={70} />
         <YAxis />
-        <Tooltip />
+        <Tooltip formatter={(v,_n,p) => [`€${v}`, p?.payload?.tier || 'Price']} />
         <Legend />
-        <ReferenceLine y={peakStd.price}  stroke="#3b82f6" strokeDasharray="5 5" label={{ value:`Std opt €${peakStd.price}`,  position:'insideRight', fill:'#3b82f6' }}/>
-        <ReferenceLine y={peakPrem.price} stroke="#f97316" strokeDasharray="5 5" label={{ value:`Prem opt €${peakPrem.price}`, position:'insideRight', fill:'#f97316' }}/>
-        <Bar dataKey="standard" name="Standard">{compData.map((e,i)=><Cell key={'s'+i} fill={e.color} />)}</Bar>
-        <Bar dataKey="premium"  name="Premium" >{compData.map((e,i)=><Cell key={'p'+i} fill={e.color} opacity={.6} />)}</Bar>
+        <ReferenceLine y={peakStd.price}  stroke="#2563eb" strokeDasharray="5 5" label={{ value:`Std opt €${peakStd.price}`,  position:'insideTopRight', fill:'#2563eb', fontSize:11 }}/>
+        <ReferenceLine y={peakPrem.price} stroke="#f97316" strokeDasharray="5 5" label={{ value:`Prem opt €${peakPrem.price}`, position:'insideBottomRight', fill:'#f97316', fontSize:11 }}/>
+        <Bar dataKey="price" name="Price (€)">
+          {compData.map((e,i) => <Cell key={i} fill={e.color} opacity={e.isUs ? 1 : 0.85} />)}
+        </Bar>
       </BarChart>
     </ResponsiveContainer>
   );
 
+  /* Combined positioning chart — Std + Prem × Day / Weekend / Week in ONE chart,
+     with the competitors' single tariff shown as reference lines for the active period. */
+  const CombinedPositioningChart = ({h=380, w="100%"}) => {
+    const data = PERIODS.map(p => ({
+      period: p.label.split(' ')[0],
+      'Nomade Standard': ourPrices[p.k].standard,
+      'Nomade Premium':  ourPrices[p.k].premium,
+      'Further VAN':     competitorPrice(p.k, 'furtherVAN'),
+      'People Camper':   competitorPrice(p.k, 'peopleCamper'),
+      'Ocean Vans':      competitorPrice(p.k, 'oceanVans')
+    }));
+    return (
+      <ResponsiveContainer width={w} height={h}>
+        <BarChart data={data} margin={{top:30, right:30, left:0, bottom:10}}>
+          <CartesianGrid strokeDasharray="3 3" />
+          <XAxis dataKey="period" />
+          <YAxis />
+          <Tooltip formatter={v => `€${v}`} />
+          <Legend wrapperStyle={{fontSize:'.82rem'}} />
+          {/* Nomade — the two-tier sandwich */}
+          <Bar dataKey="Nomade Standard" fill="#2563eb" />
+          <Bar dataKey="Nomade Premium"  fill="#f97316" />
+          {/* Competitors — single-tariff reference bars in grey tones */}
+          <Bar dataKey="Further VAN"   fill="#93c5fd" />
+          <Bar dataKey="People Camper" fill="#c4b5fd" />
+          <Bar dataKey="Ocean Vans"    fill="#6ee7b7" />
+        </BarChart>
+      </ResponsiveContainer>
+    );
+  };
+
   const GapChart = ({h=300, w="100%"}) => {
     const data = COMP_META.map(c => ({ name: c.name,
-      standardGap: ourPrices[period].standard - competitors[period][c.k].standard,
-      premiumGap:  ourPrices[period].premium  - competitors[period][c.k].premium }));
+      standardGap: ourPrices[period].standard - competitorPrice(period, c.k),
+      premiumGap:  ourPrices[period].premium  - competitorPrice(period, c.k) }));
     return (
       <ResponsiveContainer width={w} height={h}>
         <BarChart data={data}>
@@ -604,11 +651,12 @@ function App() {
   };
 
   const CHART_CATALOG = [
-    { k:'wtp',         label:'WTP distribution',        C: WTPChart,         group:'overview' },
-    { k:'profit',      label:'Profit curve',            C: ProfitChart,      group:'overview' },
-    { k:'demand',      label:'Demand + Revenue',        C: DemandChart,      group:'overview' },
-    { k:'competitive', label:'Competitive positioning', C: CompetitiveChart, group:'overview' },
-    { k:'gap',         label:'Gap vs competitors',      C: GapChart,         group:'overview' },
+    { k:'wtp',         label:'WTP distribution',        C: WTPChart,               group:'overview' },
+    { k:'profit',      label:'Profit curve',            C: ProfitChart,            group:'overview' },
+    { k:'demand',      label:'Demand + Revenue',        C: DemandChart,            group:'overview' },
+    { k:'competitive', label:'Competitive positioning', C: CompetitiveChart,       group:'overview' },
+    { k:'combined',    label:'Std+Prem × Day/Weekend/Week + competitors', C: CombinedPositioningChart, group:'overview' },
+    { k:'gap',         label:'Gap vs competitors',      C: GapChart,               group:'overview' },
     { k:'anchor',      label:'Anchoring / Sandwich',    C: AnchorChart,      group:'psych' },
     { k:'charm',       label:'Charm pricing (digit 9)', C: CharmChart,       group:'psych' },
     { k:'prospect',    label:'Prospect Theory',         C: ProspectChart,    group:'psych' },
@@ -752,8 +800,7 @@ function App() {
       s6.addRow([]);
       s6.addRow(['— Competitor prices (active period: ' + period + ') —']).font = { bold: true };
       for (const c of COMP_META) {
-        s6.addRow([c.name + ' standard (€)', competitors[period][c.k].standard]);
-        s6.addRow([c.name + ' premium (€)',  competitors[period][c.k].premium]);
+        s6.addRow([c.name + ' daily tariff (€) [single tier]', competitorPrice(period, c.k)]);
       }
       s6.addRow([]);
       s6.addRow(['— KPIs (active view) —']).font = { bold: true };
@@ -948,6 +995,17 @@ function App() {
           </p>
         </div>
 
+        <div className="card" style={{background:'#ecfdf5', borderColor:'#059669'}}>
+          <h2 style={{color:'#065f46'}}>✔ Everything is coordinated — one number, one source of truth</h2>
+          <p className="note" style={{color:'#065f46'}}>
+            The three price-setting tabs share the <strong>same state</strong>. If you change Nomade's Standard price on
+            Competition-based (drag the green line) or on Psychological factors (click "Apply middle / charm → Our Standard"),
+            it is the <strong>same number</strong> that appears on Position &amp; prices and that ends up in the downloaded Excel.
+            It is a <strong>closed loop</strong>: WTP analysis ⇆ competitive positioning ⇆ psychological factors ⇆ final position ⇆ Excel.
+            No need to re-enter anything. The Position &amp; prices tab is simply the <em>current snapshot</em> of all your moves.
+          </p>
+        </div>
+
         <div className="card">
           <h2>How to use the simulator — in 5 steps</h2>
           <ol className="step-list">
@@ -1052,15 +1110,15 @@ function App() {
               <KPI label={`Lost vs peak (€${live.peakPrice})`} value={live.lostVsPeak===0 ? '€0 (optimum!)' : `−€${live.lostVsPeak.toLocaleString()}`} color={live.lostVsPeak===0?'green':'red'} />
             </div>
             <p className="hint" style={{marginTop:8}}>
-              The green line is <strong>draggable</strong>. Compare the profit at each competitor's dashed line: if Further VAN is at €{competitors[period].furtherVAN[version]} and our curve there is <em>higher</em> than at €{live.price}, we gain by moving toward them.
+              The green line is <strong>draggable</strong>. Compare the profit at each competitor's dashed line: if Further VAN is at €{competitorPrice(period, 'furtherVAN')} and our curve there is <em>higher</em> than at €{live.price}, we gain by moving toward them.
             </p>
 
             <div className="row" style={{marginTop:10}}>
               <button className="btn primary" onClick={() => setOurPrices(prev => ({...prev, [period]: { ...prev[period], [version]: (version==='standard'?peakStd:peakPrem).price }}))}>Snap to peak</button>
               {COMP_META.map(c => (
                 <button key={c.k} className="btn" style={{borderColor:c.color, color:c.color}}
-                  onClick={() => setOurPrices(prev => ({...prev, [period]: { ...prev[period], [version]: competitors[period][c.k][version] }}))}>
-                  Match {c.name} (€{competitors[period][c.k][version]})
+                  onClick={() => setOurPrices(prev => ({...prev, [period]: { ...prev[period], [version]: competitorPrice(period, c.k) }}))}>
+                  Match {c.name} (€{competitorPrice(period, c.k)})
                 </button>
               ))}
             </div>
@@ -1095,14 +1153,20 @@ function App() {
         )}
 
         <div className="card">
-          <h3>Detailed price table</h3>
+          <h3>Detailed price table — {periodLabel}</h3>
+          <p className="note" style={{marginBottom:10}}>
+            <strong>Nomade</strong> offers two tiers (Standard &amp; Premium). The three <strong>competitors offer a single tier</strong> — there is no Std/Prem split on their side, and their published tariff is <strong>daily only</strong>.
+          </p>
           <table>
-            <thead><tr><th>Company</th><th>Standard (€)</th><th>Premium (€)</th><th>Premium − Standard</th></tr></thead>
+            <thead><tr><th>Company</th><th>Tier</th><th>Price (€)</th><th>Gap vs Nomade Std</th><th>Gap vs Nomade Prem</th></tr></thead>
             <tbody>
               {compData.map((c,i) => (
                 <tr key={i} style={c.isUs ? {background:'#fff7ed', fontWeight:600} : null}>
                   <td><span style={{display:'inline-block', width:10, height:10, borderRadius:10, background:c.color, marginRight:8}}/>{c.name}</td>
-                  <td>€{c.standard}</td><td>€{c.premium}</td><td>€{c.premium - c.standard}</td>
+                  <td>{c.tier}</td>
+                  <td>€{c.price}</td>
+                  <td>{c.isUs ? '—' : `${ourPrices[period].standard - c.price >= 0 ? '+' : ''}€${ourPrices[period].standard - c.price}`}</td>
+                  <td>{c.isUs ? '—' : `${ourPrices[period].premium  - c.price >= 0 ? '+' : ''}€${ourPrices[period].premium  - c.price}`}</td>
                 </tr>
               ))}
             </tbody>
@@ -1125,8 +1189,8 @@ function App() {
           <div className="grid-4" style={{marginTop:10}}>
             <KPI label={`Our Std (${period})`} value={`€${ourPrices[period].standard}`} color="blue" />
             <KPI label={`Our Prem (${period})`} value={`€${ourPrices[period].premium}`} color="orange" />
-            <KPI label="Cheapest competitor (Std)" value={`€${Math.min(...COMP_META.map(c=>competitors[period][c.k].standard))}`} />
-            <KPI label="Most expensive competitor (Std)" value={`€${Math.max(...COMP_META.map(c=>competitors[period][c.k].standard))}`} />
+            <KPI label="Cheapest competitor" value={`€${Math.min(...COMP_META.map(c=>competitorPrice(period, c.k)))}`} />
+            <KPI label="Most expensive competitor" value={`€${Math.max(...COMP_META.map(c=>competitorPrice(period, c.k)))}`} />
           </div>
         </div>
 
@@ -1222,8 +1286,8 @@ function App() {
               <div style={{alignSelf:'end'}}>
                 {COMP_META.map(c => (
                   <button key={c.k} className="btn" style={{borderColor:c.color, color:c.color, marginRight:6}}
-                    onClick={()=>setRefPrice(competitors[period][c.k][version])}>
-                    Use {c.name} €{competitors[period][c.k][version]}
+                    onClick={()=>setRefPrice(competitorPrice(period, c.k))}>
+                    Use {c.name} €{competitorPrice(period, c.k)}
                   </button>
                 ))}
               </div>
@@ -1271,15 +1335,16 @@ function App() {
 
         <div className="card">
           <h2>Competitor prices — {periodLabel}</h2>
-          <p className="note">Update these if you have fresher intelligence. Everything else (gap, optimal price, etc.) recomputes live.</p>
+          <p className="note">
+            Competitors offer <strong>one tier only</strong> (no Standard / Premium split) and publish <strong>daily tariffs only</strong>.
+            Weekend / Week values are a reference projection (≈ −5 % / −30 % per day). Update them if you have better intelligence.
+          </p>
           <div className="grid-3">
             {COMP_META.map(c => (
               <div key={c.k} className="box-soft" style={{borderColor:c.color}}>
                 <h3 style={{color:c.color}}>{c.name}</h3>
-                <label>Standard (€)</label>
-                <input type="number" value={competitors[period][c.k].standard} onChange={e=>updateCompetitor(c.k,'standard',e.target.value)}/>
-                <label style={{marginTop:8}}>Premium (€)</label>
-                <input type="number" value={competitors[period][c.k].premium}  onChange={e=>updateCompetitor(c.k,'premium',e.target.value)}/>
+                <label>Daily tariff — single tier (€)</label>
+                <input type="number" value={competitorPrice(period, c.k)} onChange={e=>updateCompetitor(c.k,'price',e.target.value)}/>
               </div>
             ))}
           </div>

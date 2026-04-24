@@ -226,24 +226,53 @@ def build():
             tbl.rows[i].cells[j].text = v
     doc.add_paragraph()
 
-    # 3.4 Competitors (with attributes)
-    h(doc, '3.4 Competitor data (daily tariffs only)', level=2)
-    tbl = doc.add_table(rows=5, cols=7); tbl.style = 'Light Grid Accent 1'
-    make_header_row(tbl, ['Competitor','Std (€/d)','Prem (€/d)','Gap (€)','Establishment 0–10','Brand 0–10','Sustainability 0–10'])
+    # 3.4 Competitors (single-tariff, daily-only)
+    h(doc, '3.4 Competitor data — single-tariff, daily-only', level=2)
+    note_box(doc,
+             'Important: the three competitors offer a SINGLE VERSION of their camper — '
+             'there is NO Standard / Premium split on their side. They also publish '
+             'DAILY TARIFFS ONLY. Any weekend / weekly number in the simulator is a '
+             'reference projection from the daily tariff, not observed data. Nomade is '
+             'the only player proposing two tiers (Standard + Premium) and three '
+             'rental periods (Day / Weekend / Week).',
+             title='Asymmetry in the competitive set',
+             fill='E0F2FE', title_color=RGBColor(0x1E, 0x3A, 0x8A))
+
+    tbl = doc.add_table(rows=5, cols=6); tbl.style = 'Light Grid Accent 1'
+    make_header_row(tbl, ['Competitor','Daily tariff (€)','Tiers offered','Establishment 0–10','Brand 0–10','Sustainability 0–10'])
     for i, row in enumerate([
-        ('Further VAN',   '85', '95', '10', '8', '8', '5'),
-        ('People Camper', '105','115','10', '9', '9', '4'),
-        ('Ocean Vans',    '98', '129','31', '9', '9', '6'),
-        ('Nomade',        '80', '100','20', '2', '3', '10'),
+        ('Further VAN',   '85',           'One (single tier)', '8', '8', '5'),
+        ('People Camper', '105',          'One (single tier)', '9', '9', '4'),
+        ('Ocean Vans',    '98',           'One (single tier)', '9', '9', '6'),
+        ('Nomade',        '80 / 100 (Std / Prem)', 'TWO (Standard + Premium)', '2', '3', '10'),
     ], 1):
         for j, v in enumerate(row):
             tbl.rows[i].cells[j].text = v
     doc.add_paragraph()
     para(doc, 'Competitor profiles:', bold=True)
-    bullet(doc, 'Further VAN — well-established, affordable. Less differentiated; likely operational-efficiency focus.')
-    bullet(doc, 'People Camper — premium brand, high-end positioning. Likely higher costs or a significant brand premium.')
-    bullet(doc, 'Ocean Vans — sophisticated premium offering. Significant price gap suggests strong premium differentiation.')
-    bullet(doc, 'Nomade — NEW ENTRANT. Highly differentiated (sustainable design, customisation, 1-month delivery) but low brand recognition.')
+    bullet(doc, 'Further VAN — well-established, affordable single-tier offer. Less differentiated; operational-efficiency focus.')
+    bullet(doc, 'People Camper — premium single-tier positioning. High daily tariff suggests brand-premium pricing.')
+    bullet(doc, 'Ocean Vans — sophisticated single-tier offer, mid-high daily price. Positioned on comfort + design.')
+    bullet(doc, 'Nomade — NEW ENTRANT with two tiers. Highly differentiated (sustainable design, customisation, 1-month delivery) but low brand recognition. The two-tier structure alone is a differentiator vs the single-tier field.')
+
+    # 3.5 Positioning maps
+    h(doc, '3.5 Positioning maps — price vs. perceived attribute', level=2)
+    para(doc,
+         'A positioning map plots each player on two axes: price (Y) and a key '
+         'perceived attribute (X — brand recognition, sustainability, comfort, etc.). '
+         'It is the most direct visual way to see where the white space of the market '
+         'is and where the closest competitor actually sits.')
+    para(doc, 'In this case you can draw three useful maps:', bold=True)
+    bullet(doc, 'Price × Brand recognition — shows that Nomade sits LOW on brand but can still take a middle-price position by leveraging the sustainability axis.')
+    bullet(doc, 'Price × Sustainability — the axis where Nomade scores 10/10. The map makes the differentiation obvious and justifies a skimming-style move on Premium.')
+    bullet(doc, 'Price × Versatility (number of tariffs / tiers) — Nomade is ALONE with 2 tiers and 3 periods. The others are single-tier + daily-only. The asymmetry is itself a positioning lever (anchoring sandwich, flexible bundles).')
+    para(doc,
+         'The simulator renders these ideas in a single chart titled '
+         '"Std+Prem × Day/Weekend/Week + competitors" — tick it on the '
+         'Competition-based tab. The two Nomade bars (blue/orange) sit next to the '
+         'three competitor bars (pale blue / purple / green), so the sandwich vs '
+         'single-tariff picture appears in one glance.',
+         italic=True, color=GREY)
 
     # ---------- 4. Tool features / simulator walkthrough ----------
     doc.add_page_break()
@@ -319,7 +348,21 @@ def build():
     bullet(doc, 'Build a positioning map of Nomade vs. competitors on the key attributes.')
     para(doc, 'Simulator tasks:', bold=True, color=GREY)
     bullet(doc, 'Read profit at each competitor\'s dashed line on the Profit curve.')
-    bullet(doc, 'Fill the table of brand / cost assumptions per competitor (see section 2.4).')
+    bullet(doc, 'Tick the "Std+Prem × Day/Weekend/Week + competitors" chart on Competition-based to see the 2-tier vs 1-tier asymmetry at a glance.')
+    note_box(doc,
+             '(a) COST STRUCTURE — Established players (Further VAN, People Camper, '
+             'Ocean Vans) enjoy amortised fleets, procurement scale and branded '
+             'channels ⇒ LOWER variable cost per rental but HIGHER fixed marketing / '
+             'brand costs. Nomade is new ⇒ SIMILAR variable cost (sustainable-design '
+             'efficiency compensates scale), HIGHER fixed cost per unit (thin fleet). '
+             '(b) DIFFERENTIATION — their price premium is explained mostly by BRAND '
+             'RECOGNITION, not by objectively superior product features. '
+             '(c) POSITIONING MAP — Nomade (Establishment 2/10, Brand 3/10, '
+             'Sustainability 10/10, Design 9/10) vs Further VAN (8/8/5/7), People '
+             'Camper (9/9/4/6), Ocean Vans (9/9/6/7). Nomade is OBJECTIVELY MORE '
+             'DIFFERENTIATED but PERCEIVED AS LESS so — brand is the gap to close.',
+             title='Answer guide — P1',
+             fill='ECFDF5', title_color=RGBColor(0x06, 0x5F, 0x46))
     para(doc, 'Your answer:', bold=True)
     answer_box(doc, lines=12)
 
@@ -332,6 +375,19 @@ def build():
     bullet(doc, 'Is Popt > or < competitors\' prices? Is the reason cost structure or differentiation?')
     bullet(doc, 'Given the scenario, should Nomade pursue: (a) penetration (−) / aggressive penetration (−−), (b) skimming (+) / fast-aggressive (++), or (c) nothing?')
     bullet(doc, 'Justify with competition theory and the WTP profit analysis.')
+    note_box(doc,
+             'WTP optima: Standard €80 · Premium €100. Competitor range (daily) '
+             '€85–€105. Therefore Popt < C. Cost structure similar or slightly '
+             'better (sustainable-design efficiency); differentiation OBJECTIVELY '
+             'HIGHER but BRAND RECOGNITION LOW. This matches SCENARIO b.3 (Popt < C '
+             'because perceived as less differentiated, despite real superiority). '
+             'RECOMMENDATION → SKIMMING (+) on the Premium tier (raise gradually to '
+             'build brand anchor) and a gentle PENETRATION (−) on Standard only for '
+             'the first season (seed trials). Never (−−) aggressive penetration — it '
+             'burns margin without fixing the brand gap. Confirm the decision on the '
+             'Profit curve: check the profit at +€5 and +€10 before committing.',
+             title='Answer guide — P2',
+             fill='ECFDF5', title_color=RGBColor(0x06, 0x5F, 0x46))
     para(doc, 'Your answer:', bold=True)
     answer_box(doc, lines=14)
 
@@ -344,6 +400,18 @@ def build():
     bullet(doc, 'Assume industry conventions: weekend ≈ 5–10 % per-day discount, week ≈ 20–30 % total discount.')
     bullet(doc, 'Propose Nomade\'s weekend / week prices.')
     bullet(doc, 'Use anchoring (daily × 7 vs weekly) and the "sandwich" between Standard and Premium.')
+    note_box(doc,
+             'Use weekend ≈ −5 % per day (2-night packages) and week ≈ −30 % per day '
+             '(long-stay discount). Proposed Nomade table: Std (Day €80 / Weekend '
+             '€75 per day / Week €60 per day) · Prem (Day €100 / Weekend €95 per '
+             'day / Week €77 per day). Anchor the week price by displaying the '
+             'per-day saving vs the "daily × 7" reference. On Psychological '
+             'factors → Anchoring, keep Basic = cheapest competitor, Middle = '
+             'Nomade Std, Premium = Nomade Prem — click Apply-to-position. Use the '
+             '"Std+Prem × Day/Weekend/Week + competitors" chart to verify the 2×3 '
+             'sandwich visually.',
+             title='Answer guide — P3',
+             fill='ECFDF5', title_color=RGBColor(0x06, 0x5F, 0x46))
     para(doc, 'Your answer:', bold=True)
     answer_box(doc, lines=14)
 
@@ -363,6 +431,21 @@ def build():
     bullet(doc, 'Expected business outcomes (profit, market positioning).')
     bullet(doc, 'Consider alternative structures (e.g., 3-tier with "enhanced" version).')
     bullet(doc, 'Risk mitigation (competitor reactions).')
+    note_box(doc,
+             'Baseline proposal (with charm endings): Standard Day €79 / Weekend '
+             '€75/day / Week €60/day · Premium Day €99 / Weekend €95/day / Week '
+             '€77/day. Charm €79 / €99 captures the digit-9 uplift without eroding '
+             'margin. Expected outcome: ≈ 65 % acceptance on Std, 40–50 % on Prem, '
+             '−€5 to −€10 gap vs competitor average, total profit > €80 k/yr '
+             'combined. Alternative 3-tier (Base / Std / Premium) would deepen the '
+             'anchoring effect but adds fleet complexity — defer to year 2. Risk '
+             'mitigation: (i) competitors undercut daily Std → 6-month price lock + '
+             'loyalty week-at-day-price; (ii) brand-recognition handicap → push '
+             'sustainability narrative on every touchpoint; (iii) cannibalisation → '
+             'keep the Std–Prem gap ≥ €20. Fill every price on Position & prices, '
+             'add the analyst note, download the Excel — that file is the proposal.',
+             title='Answer guide — P4',
+             fill='ECFDF5', title_color=RGBColor(0x06, 0x5F, 0x46))
     para(doc, 'Your answer:', bold=True)
     answer_box(doc, lines=16)
 
