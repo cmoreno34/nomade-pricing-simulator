@@ -323,7 +323,7 @@ function App() {
   const [ourPrices, setOurPrices] = useState(OUR_DEFAULT);
   const [tab, setTab] = useState('guide');
 
-  const [overviewGraphs, setOverviewGraphs] = useState(['wtp','profit','competitive']);
+  const [overviewGraphs, setOverviewGraphs] = useState(['wtp','profit','competitive','posBrand','posSust','posDesign']);
   const [psychGraphs, setPsychGraphs] = useState(['anchor','charm','prospect','reference']);
 
   const [charmTest, setCharmTest] = useState({ round: 80, charm: 79 });
@@ -535,23 +535,29 @@ function App() {
     { name: PROFILES.oceanVans.name,    x: PROFILES.oceanVans[attr],    y: competitorPrice('day','oceanVans'),    color: PROFILES.oceanVans.color,    isUs: false, size: PROFILES.oceanVans.size }
   ];
 
-  const PositioningMap = ({ attrKey, attrLabel, h=360, w="100%", children }) => {
+  const PositioningMap = ({ attrKey, attrLabel, h=340, w="100%", children }) => {
     const data = positioningData(attrKey);
+    const yMin = Math.max(0, Math.min(...data.map(d=>d.y)) - 15);
+    const yMax = Math.max(...data.map(d=>d.y)) + 20;
     return (
       <ResponsiveContainer width={w} height={h}>
-        <ScatterChart margin={{top:20, right:30, bottom:50, left:10}}>
+        <ScatterChart margin={{top:20, right:60, bottom:50, left:20}}>
           <CartesianGrid strokeDasharray="3 3" />
           <XAxis type="number" dataKey="x" name={attrLabel} domain={[0,10]}
+                 ticks={[0,2,4,6,8,10]}
                  label={{ value: attrLabel + ' (0–10)', position:'insideBottom', offset:-10, fontSize:12 }} />
-          <YAxis type="number" dataKey="y" name="Price (€)"
+          <YAxis type="number" dataKey="y" name="Price"
+                 domain={[yMin, yMax]}
                  label={{ value:'Daily price (€)', angle:-90, position:'insideLeft', fontSize:12 }} />
           <Tooltip cursor={{strokeDasharray:'3 3'}}
-                   formatter={(v,n) => n==='Price (€)' ? `€${v}` : `${v}/10`}
+                   formatter={(v,n) => n==='Price' ? `€${v}` : `${v}/10`}
                    labelFormatter={() => ''} />
-          <Scatter data={data} shape="circle">
-            {data.map((d,i) => <Cell key={i} fill={d.color} />)}
-            <LabelList dataKey="name" position="right" style={{fontSize:11, fontWeight:600}} />
-          </Scatter>
+          {/* One Scatter per point so each gets its own colour + label */}
+          {data.map((d,i) => (
+            <Scatter key={i} name={d.name} data={[d]} fill={d.color}>
+              <LabelList dataKey="name" position="right" offset={10} style={{fontSize:11, fontWeight:600, fill:d.color}} />
+            </Scatter>
+          ))}
           {children}
         </ScatterChart>
       </ResponsiveContainer>
@@ -1225,6 +1231,39 @@ function App() {
             <GapChart />
           </div>
         )}
+
+        {/* Always-visible POSITIONING MAPS block so students don't miss them */}
+        <div className="card" style={{background:'#f5f3ff', borderColor:'#7c3aed'}}>
+          <h2 style={{color:'#5b21b6'}}>Positioning maps — why Nomade charges less</h2>
+          <div className="explain purple">
+            Each map plots <strong>daily price (Y)</strong> against one perceived attribute (X).
+            The same four players — <span style={{color:PROFILES.nomade.color,fontWeight:700}}>Nomade</span>,
+            <span style={{color:PROFILES.furtherVAN.color,fontWeight:700}}> Further VAN</span>,
+            <span style={{color:PROFILES.peopleCamper.color,fontWeight:700}}> People Camper</span>,
+            <span style={{color:PROFILES.oceanVans.color,fontWeight:700}}> Ocean Vans</span> — appear as coloured dots on each chart.
+            Reading them together answers Q1: Nomade's lower price is explained by the <strong>brand-recognition gap</strong>, not by inferior product or costs (companies are similar-sized).
+          </div>
+          <div className="grid-3">
+            <div>
+              <h3 style={{color:'#5b21b6'}}>Price × Brand recognition</h3>
+              <PositioningBrandChart h={260} />
+              <p className="note">Nomade bottom-left (3/10, €80). Competitors top-right (8–9/10, €85–€105). <strong>Price gap ≈ brand gap.</strong></p>
+            </div>
+            <div>
+              <h3 style={{color:'#5b21b6'}}>Price × Sustainability</h3>
+              <PositioningSustainChart h={260} />
+              <p className="note">Nomade top-right (10/10) yet cheapest — <strong>picture flips</strong>. Justifies a skimming move on Premium.</p>
+            </div>
+            <div>
+              <h3 style={{color:'#5b21b6'}}>Price × Design</h3>
+              <PositioningDesignChart h={260} />
+              <p className="note">Nomade at 9/10 design, still €80. The pricing gap is <strong>not</strong> explained by product inferiority.</p>
+            </div>
+          </div>
+          <div className="explain" style={{marginTop:14}}>
+            <strong>Strategic implication.</strong> Investing in brand perception (narrative, reviews, channel presence) moves Nomade <em>up</em> the price axis on the brand map without eroding the advantage on the sustainability and design maps. That is the justification for a skimming move (+) on Premium and a gentle penetration (−) only on Standard in year 1.
+          </div>
+        </div>
 
         <div className="card">
           <h3>Detailed price table — {periodLabel}</h3>
