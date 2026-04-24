@@ -272,12 +272,20 @@ def build():
     h(doc, '3.5 Positioning maps — price vs. perceived attribute', level=2)
     para(doc,
          'A positioning map plots each player on two axes: price (Y) and a key '
-         'perceived attribute (X). It is the most direct visual way to see where '
-         'the market\'s white space is, where the closest competitor really sits, '
+         'perceived attribute (X). It is the most direct way to see where the '
+         'market\'s white space is, where the closest competitor actually sits, '
          'and why Nomade ends up charging less despite being objectively more '
          'differentiated.')
 
-    para(doc, 'The four players\' coordinates (used by the simulator):', bold=True)
+    para(doc,
+         'The simulator renders three interactive positioning maps — they are visible '
+         'in TWO places: (a) inside the How-to-use tab, directly below the "Why '
+         'Nomade charges less" explanation, and (b) on the Competition-based tab as '
+         'a dedicated purple card. Each of the four players appears as a coloured '
+         'dot with its name next to it.',
+         italic=True, color=GREY)
+
+    para(doc, 'The four players\' coordinates (the exact values plotted by the simulator):', bold=True)
     tbl = doc.add_table(rows=5, cols=6); tbl.style = 'Light Grid Accent 1'
     make_header_row(tbl, ['Player','Daily price (€)','Brand 0–10','Sustainability 0–10','Design 0–10','Fleet size'])
     for i, row in enumerate([
@@ -290,18 +298,32 @@ def build():
             tbl.rows[i].cells[j].text = v
     doc.add_paragraph()
 
-    para(doc, 'Three useful maps — tick them on Competition-based → Graph picker:', bold=True)
-    bullet(doc, 'Price × Brand recognition — Nomade is bottom-left (low brand, low price); competitors are top-right (high brand, high price). The price gap mirrors the brand gap almost perfectly.')
-    bullet(doc, 'Price × Sustainability — the picture flips: Nomade is top-right (best score, 10/10) yet the LEAST expensive. The competitors sit bottom-left, with People Camper the weakest on sustainability (4/10). This map alone justifies a skimming move on Premium.')
-    bullet(doc, 'Price × Design / customisation — Nomade is mid-top (9/10 on design, €80 price). Competitors cluster mid-price / mid-design. This shows that the pricing gap is NOT explained by product inferiority.')
+    para(doc, 'Map 1 — Price × Brand recognition', bold=True, color=RGBColor(0x5B, 0x21, 0xB6))
+    bullet(doc, 'Nomade sits in the BOTTOM-LEFT (brand 3/10, €80). Competitors cluster in the TOP-RIGHT (brand 8–9/10, €85–€105).')
+    bullet(doc, 'Reading: the price gap mirrors the brand gap almost perfectly. Further VAN at 8/10 brand → €85 · People Camper and Ocean Vans at 9/10 brand → €98–€105 · Nomade at 3/10 → €80.')
+    bullet(doc, 'Diagonal of the map = "price-per-unit-of-brand". Nomade is ON the diagonal — not under-priced vs its brand, simply unknown.')
+
+    para(doc, 'Map 2 — Price × Sustainability', bold=True, color=RGBColor(0x5B, 0x21, 0xB6))
+    bullet(doc, 'Picture FLIPS: Nomade moves to the TOP-RIGHT (sustainability 10/10) while still being the cheapest.')
+    bullet(doc, 'People Camper is bottom-left (4/10) at the highest price (€105) — the opposite of value-for-money on this axis.')
+    bullet(doc, 'Reading: Nomade is clearly under-priced if customers actually valued sustainability as much as the product delivers. This is the strongest argument for a Premium-tier skimming move (+).')
+
+    para(doc, 'Map 3 — Price × Design / customisation', bold=True, color=RGBColor(0x5B, 0x21, 0xB6))
+    bullet(doc, 'Nomade at 9/10 design, €80 — still cheapest despite the highest design score.')
+    bullet(doc, 'Competitors 6–7/10 design at €85–€105.')
+    bullet(doc, 'Reading: the pricing gap is NOT explained by product inferiority. The product is better; the perception is weaker.')
 
     note_box(doc,
-             'The three maps together tell the story: Nomade\'s lower price is NOT '
+             'The three maps together tell the same story: Nomade\'s lower price is NOT '
              'explained by inferior product or by a structural cost disadvantage '
-             '(sizes are similar). It is explained almost entirely by the BRAND '
-             'RECOGNITION gap. The strategic implication is therefore clear — '
-             'invest in brand perception (narrative, channels, reviews, endorsements) '
-             'to move UP the price axis without having to touch the product.',
+             '(fleet sizes are similar — this is a peer set, not David vs Goliath). '
+             'It is explained almost entirely by the BRAND-RECOGNITION gap. The '
+             'strategic implication is therefore clear — invest in brand perception '
+             '(narrative, channels, reviews, endorsements) to move UP the price axis '
+             'on the brand map without eroding the advantage on the sustainability '
+             'and design maps. That is the justification for a skimming move (+) on '
+             'Premium and a gentle penetration (−) on Standard only in year 1 (seed '
+             'trials), rather than aggressive price cuts (−−).',
              title='Why Nomade charges less — and what to do about it',
              fill='F5F3FF', title_color=RGBColor(0x5B, 0x21, 0xB6))
 
@@ -329,7 +351,7 @@ def build():
 
     for s in [
         'Pick period (Day / Weekend / Week) and version (Standard / Premium) at the top.',
-        'Competition-based → Profit curve: DRAG the green "Our price" line. Coloured dashed lines are competitors; KPIs (profit, demand, revenue, lost-vs-peak) update live. Use Match-competitor / Snap-to-peak quick-jump buttons.',
+        'Competition-based → Profit curve: DRAG the green "Our price" line. Coloured dashed lines are competitors; KPIs (profit, demand, revenue, lost-vs-peak) update live. Use Match-competitor / Snap-to-peak quick-jump buttons. Scroll further to see the THREE POSITIONING MAPS (Price × Brand / Sustainability / Design) in the purple card — these answer Q1 visually.',
         'Psychological factors: all inputs pre-loaded from your current position. Experiment with Anchoring, Charm pricing, Prospect Theory (before/after), Reference price. Use Apply-to-Standard / Apply-to-Premium to push tested numbers into the final position.',
         'Position & prices: same interactive chart + numeric inputs for every period. Add the analyst note.',
         'Case answers: the four formal questions (see section 4) — write your answer in each box.',
